@@ -1,0 +1,56 @@
+[gd_scene load_steps=8 format=3 uid="uid://dq8hjk2n5v7pm"]
+
+[ext_resource type="Script" path="res://scripts/Enemy.gd" id="1_enemy"]
+[ext_resource type="PackedScene" uid="uid://bxp4n8kw2mtjy" path="res://scenes/Explosion.tscn" id="2_explosion"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_enemy_body"]
+albedo_color = Color(0.7, 0.2, 0.2, 1)
+metallic = 0.4
+roughness = 0.6
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_enemy_cockpit"]
+albedo_color = Color(0.3, 0.1, 0.1, 1)
+metallic = 0.6
+roughness = 0.3
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_enemy"]
+size = Vector3(1.5, 0.5, 1.2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_enemy_body"]
+size = Vector3(0.8, 0.35, 1.0)
+
+[sub_resource type="BoxMesh" id="BoxMesh_enemy_cockpit"]
+size = Vector3(0.3, 0.2, 0.3)
+
+[sub_resource type="BoxMesh" id="BoxMesh_enemy_wing"]
+size = Vector3(0.5, 0.1, 0.4)
+
+[node name="Enemy" type="Area3D"]
+collision_layer = 2
+collision_mask = 5
+script = ExtResource("1_enemy")
+explosion_scene = ExtResource("2_explosion")
+
+[node name="ShipMesh" type="Node3D" parent="."]
+
+[node name="Body" type="MeshInstance3D" parent="ShipMesh"]
+mesh = SubResource("BoxMesh_enemy_body")
+surface_material_override/0 = SubResource("StandardMaterial3D_enemy_body")
+
+[node name="Cockpit" type="MeshInstance3D" parent="ShipMesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, 0.2)
+mesh = SubResource("BoxMesh_enemy_cockpit")
+surface_material_override/0 = SubResource("StandardMaterial3D_enemy_cockpit")
+
+[node name="WingLeft" type="MeshInstance3D" parent="ShipMesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.6, 0, 0)
+mesh = SubResource("BoxMesh_enemy_wing")
+surface_material_override/0 = SubResource("StandardMaterial3D_enemy_body")
+
+[node name="WingRight" type="MeshInstance3D" parent="ShipMesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.6, 0, 0)
+mesh = SubResource("BoxMesh_enemy_wing")
+surface_material_override/0 = SubResource("StandardMaterial3D_enemy_body")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_enemy")

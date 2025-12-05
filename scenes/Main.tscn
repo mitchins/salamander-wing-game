@@ -1,0 +1,76 @@
+[gd_scene load_steps=10 format=3 uid="uid://dkn4x8wm7q3hp"]
+
+[ext_resource type="Script" path="res://scripts/Main.gd" id="1_main"]
+[ext_resource type="Script" path="res://scripts/GameController.gd" id="2_gamecontroller"]
+[ext_resource type="Shader" path="res://shaders/crt.gdshader" id="3_crt"]
+[ext_resource type="PackedScene" uid="uid://bvqx4kjp8ymqc" path="res://scenes/Player.tscn" id="4_player"]
+[ext_resource type="Script" path="res://scripts/EnemySpawner.gd" id="5_spawner"]
+[ext_resource type="PackedScene" uid="uid://dq8hjk2n5v7pm" path="res://scenes/Enemy.tscn" id="6_enemy"]
+[ext_resource type="PackedScene" uid="uid://c3x8mj5qy2hkn" path="res://ui/HUD.tscn" id="7_hud"]
+[ext_resource type="Script" path="res://scripts/Starfield.gd" id="8_starfield"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_crt"]
+shader = ExtResource("3_crt")
+shader_parameter/barrel_distortion = 0.08
+shader_parameter/scanline_intensity = 0.12
+shader_parameter/scanline_count = 320.0
+shader_parameter/noise_intensity = 0.025
+shader_parameter/vignette_intensity = 0.25
+shader_parameter/brightness = 1.05
+shader_parameter/saturation = 1.1
+
+[sub_resource type="Environment" id="Environment_space"]
+background_mode = 1
+background_color = Color(0.02, 0.02, 0.08, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.15, 0.15, 0.25, 1)
+ambient_light_energy = 0.5
+fog_enabled = true
+fog_light_color = Color(0.05, 0.05, 0.15, 1)
+fog_density = 0.002
+fog_depth_begin = 20.0
+fog_depth_end = 150.0
+
+[node name="Main" type="Node"]
+script = ExtResource("1_main")
+
+[node name="GameController" type="Node" parent="."]
+script = ExtResource("2_gamecontroller")
+
+[node name="SubViewportContainer" type="SubViewportContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+stretch = true
+material = SubResource("ShaderMaterial_crt")
+
+[node name="GameViewport" type="SubViewport" parent="SubViewportContainer"]
+handle_input_locally = false
+size = Vector2i(480, 320)
+render_target_update_mode = 4
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="SubViewportContainer/GameViewport"]
+environment = SubResource("Environment_space")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="SubViewportContainer/GameViewport"]
+transform = Transform3D(0.866025, -0.353553, 0.353553, 0, 0.707107, 0.707107, -0.5, -0.612372, 0.612372, 0, 10, 0)
+light_color = Color(1, 0.95, 0.9, 1)
+light_energy = 1.2
+shadow_enabled = true
+
+[node name="Player" parent="SubViewportContainer/GameViewport" instance=ExtResource("4_player")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="EnemySpawner" type="Node3D" parent="SubViewportContainer/GameViewport"]
+script = ExtResource("5_spawner")
+enemy_scene = ExtResource("6_enemy")
+
+[node name="Starfield" type="Node3D" parent="SubViewportContainer/GameViewport"]
+script = ExtResource("8_starfield")
+
+[node name="HUDLayer" type="CanvasLayer" parent="."]
+layer = 10
+
+[node name="HUD" parent="HUDLayer" instance=ExtResource("7_hud")]

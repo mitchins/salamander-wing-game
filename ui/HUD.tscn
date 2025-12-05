@@ -1,0 +1,186 @@
+[gd_scene load_steps=4 format=3 uid="uid://c3x8mj5qy2hkn"]
+
+[ext_resource type="Script" path="res://scripts/HUD.gd" id="1_hud"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_hud"]
+font_size = 24
+font_color = Color(0.2, 1, 0.4, 1)
+outline_size = 2
+outline_color = Color(0, 0.2, 0.1, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_gameover"]
+font_size = 48
+font_color = Color(1, 0.2, 0.2, 1)
+outline_size = 4
+outline_color = Color(0.2, 0, 0, 1)
+
+[node name="HUD" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_hud")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 250.0
+offset_bottom = 100.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+
+[node name="ShieldLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "SHIELD: 100"
+label_settings = SubResource("LabelSettings_hud")
+
+[node name="ScoreLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "SCORE: 0000"
+label_settings = SubResource("LabelSettings_hud")
+
+[node name="Crosshair" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -30.0
+offset_top = -30.0
+offset_right = 30.0
+offset_bottom = 30.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HLine" type="ColorRect" parent="Crosshair"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -1.0
+offset_right = 20.0
+offset_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.2, 1, 0.4, 0.8)
+
+[node name="VLine" type="ColorRect" parent="Crosshair"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -1.0
+offset_top = -20.0
+offset_right = 1.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.2, 1, 0.4, 0.8)
+
+[node name="CenterDot" type="ColorRect" parent="Crosshair"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -3.0
+offset_top = -3.0
+offset_right = 3.0
+offset_bottom = 3.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(1, 1, 0.3, 1)
+
+[node name="CornerTL" type="ColorRect" parent="Crosshair"]
+layout_mode = 0
+offset_left = -5.0
+offset_top = -5.0
+offset_right = 5.0
+offset_bottom = -3.0
+color = Color(0.2, 1, 0.4, 0.6)
+
+[node name="CornerTL2" type="ColorRect" parent="Crosshair"]
+layout_mode = 0
+offset_left = -5.0
+offset_top = -5.0
+offset_right = -3.0
+offset_bottom = 5.0
+color = Color(0.2, 1, 0.4, 0.6)
+
+[node name="CornerTR" type="ColorRect" parent="Crosshair"]
+layout_mode = 0
+offset_left = 55.0
+offset_top = -5.0
+offset_right = 65.0
+offset_bottom = -3.0
+color = Color(0.2, 1, 0.4, 0.6)
+
+[node name="CornerTR2" type="ColorRect" parent="Crosshair"]
+layout_mode = 0
+offset_left = 63.0
+offset_top = -5.0
+offset_right = 65.0
+offset_bottom = 5.0
+color = Color(0.2, 1, 0.4, 0.6)
+
+[node name="CornerBL" type="ColorRect" parent="Crosshair"]
+layout_mode = 0
+offset_left = -5.0
+offset_top = 63.0
+offset_right = 5.0
+offset_bottom = 65.0
+color = Color(0.2, 1, 0.4, 0.6)
+
+[node name="CornerBL2" type="ColorRect" parent="Crosshair"]
+layout_mode = 0
+offset_left = -5.0
+offset_top = 55.0
+offset_right = -3.0
+offset_bottom = 65.0
+color = Color(0.2, 1, 0.4, 0.6)
+
+[node name="CornerBR" type="ColorRect" parent="Crosshair"]
+layout_mode = 0
+offset_left = 55.0
+offset_top = 63.0
+offset_right = 65.0
+offset_bottom = 65.0
+color = Color(0.2, 1, 0.4, 0.6)
+
+[node name="CornerBR2" type="ColorRect" parent="Crosshair"]
+layout_mode = 0
+offset_left = 63.0
+offset_top = 55.0
+offset_right = 65.0
+offset_bottom = 65.0
+color = Color(0.2, 1, 0.4, 0.6)
+
+[node name="GameOverLabel" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -250.0
+offset_top = -50.0
+offset_right = 250.0
+offset_bottom = 50.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "MISSION FAILED"
+label_settings = SubResource("LabelSettings_gameover")
+horizontal_alignment = 1
+vertical_alignment = 1
