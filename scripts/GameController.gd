@@ -77,7 +77,16 @@ func on_enemy_escaped(enemy: Enemy) -> void:
 	# Update HUD with flash effect
 	if _hud and _hud.has_method("flash_carrier_damage"):
 		_hud.flash_carrier_damage()
+	if _hud and _hud.has_method("flash_screen_carrier"):
+		_hud.flash_screen_carrier()
 	_update_hud()
+	
+	# Play carrier hit SFX
+	if has_node("/root/Audio"):
+		get_node("/root/Audio").play_sfx("carrier_hit")
+		# Play alarm if carrier is critical
+		if carrier_integrity <= 25:
+			get_node("/root/Audio").play_sfx("alarm_low_carrier")
 	
 	enemy_escaped_signal.emit(enemy)
 	print("[GAME] Enemy escaped! Carrier integrity: %d (-%d)" % [carrier_integrity, damage])
@@ -101,6 +110,15 @@ func _trigger_carrier_destroyed() -> void:
 	game_over = true
 	game_over_triggered.emit()
 	
+	# Play large explosion
+	if has_node("/root/Audio"):
+		get_node("/root/Audio").play_sfx("explosion_large")
+		get_node("/root/Audio").stop_music()
+	
+	# Screen flash
+	if _hud and _hud.has_method("flash_screen_critical"):
+		_hud.flash_screen_critical()
+	
 	if _hud:
 		_hud.show_carrier_destroyed()
 	
@@ -116,12 +134,25 @@ func player_hit(damage: int) -> void:
 	shield_changed.emit(shield)
 	_update_hud()
 	
+	# Screen flash for player damage
+	if _hud and _hud.has_method("flash_screen_damage"):
+		_hud.flash_screen_damage()
+	
 	if shield <= 0:
 		_trigger_game_over()
 
 func _trigger_game_over() -> void:
 	game_over = true
 	game_over_triggered.emit()
+	
+	# Play large explosion and stop music
+	if has_node("/root/Audio"):
+		get_node("/root/Audio").play_sfx("explosion_large")
+		get_node("/root/Audio").stop_music()
+	
+	# Critical screen flash
+	if _hud and _hud.has_method("flash_screen_critical"):
+		_hud.flash_screen_critical()
 	
 	if _hud:
 		_hud.show_game_over()

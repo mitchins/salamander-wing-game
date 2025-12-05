@@ -117,7 +117,9 @@ func _try_fire() -> void:
 	
 	_fire_cooldown = fire_rate
 	
-	# Slight chance to announce kill if enemy is low HP
+	# Play laser SFX (quieter than player)
+	if has_node("/root/Audio"):
+		get_node("/root/Audio").play_sfx_varied("player_laser", 0.9, 1.0)
 	# (enemies are typically 1 HP so this fires on kill)
 
 func take_damage(amount: int = 1) -> void:

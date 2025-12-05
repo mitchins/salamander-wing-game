@@ -1,0 +1,62 @@
+[
+  {
+    "id": "vera_contact_01",
+    "speaker": "VERA",
+    "text": "Incoming threat detected. Stand by for tactical options."
+  },
+  {
+    "id": "rider_countdown_01",
+    "speaker": "RIDER",
+    "text": "Contact in five... four... three..."
+  },
+  {
+    "id": "stone_chewout_01",
+    "speaker": "STONE",
+    "text": "Too many bogeys passing us. Focus your fire, Lieutenant!"
+  },
+  {
+    "id": "sparks_damage_01",
+    "speaker": "SPARKS",
+    "text": "You bring this crate back in one piece, I might even be nice to it."
+  },
+  {
+    "id": "razor_snark_01",
+    "speaker": "RAZOR",
+    "text": "Try not to shoot the friendlies this time, Rider."
+  },
+  {
+    "id": "razor_praise_01",
+    "speaker": "RAZOR",
+    "text": "Not terrible. For you."
+  },
+  {
+    "id": "stone_brief_01",
+    "speaker": "STONE",
+    "text": "Convoy Omega is all we've got left. You lose it, we lose the war."
+  },
+  {
+    "id": "vera_qte_held_01",
+    "speaker": "VERA",
+    "text": "Holding course. Expect heavy intercept in your lane."
+  },
+  {
+    "id": "vera_qte_evade_01",
+    "speaker": "VERA",
+    "text": "Evading. You'll be alone out front for a few seconds."
+  },
+  {
+    "id": "sparks_post_ok_01",
+    "speaker": "SPARKS",
+    "text": "Minimal scorch marks. I can work with this."
+  },
+  {
+    "id": "sparks_post_bad_01",
+    "speaker": "SPARKS",
+    "text": "Next time you want vent art, ask before you shred the hull."
+  },
+  {
+    "id": "stone_fail_01",
+    "speaker": "STONE",
+    "text": "Convoy's gone. Pack it in, Salamander Wing. We're done here."
+  }
+]

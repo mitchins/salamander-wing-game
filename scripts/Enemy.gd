@@ -74,6 +74,16 @@ func take_damage(amount: int = 1) -> void:
 	
 	if hit_points <= 0:
 		_die(true)  # Killed by player
+	else:
+		# Spawn hit spark for non-lethal hit
+		_spawn_hit_spark()
+
+func _spawn_hit_spark() -> void:
+	var spark_scene = load("res://vfx/HitSpark.tscn")
+	if spark_scene:
+		var spark = spark_scene.instantiate()
+		get_tree().current_scene.add_child(spark)
+		spark.global_position = global_position
 
 func _die(killed_by_player: bool) -> void:
 	if _is_dead:
@@ -85,6 +95,10 @@ func _die(killed_by_player: bool) -> void:
 		var explosion = explosion_scene.instantiate()
 		get_tree().current_scene.add_child(explosion)
 		explosion.global_position = global_position
+	
+	# Play explosion SFX
+	if has_node("/root/Audio"):
+		get_node("/root/Audio").play_sfx_varied("explosion_small", 0.9, 1.1)
 	
 	# Add score if killed by player
 	if killed_by_player and _game_controller:

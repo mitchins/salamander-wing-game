@@ -1,6 +1,7 @@
-[gd_scene load_steps=6 format=3 uid="uid://c3x8mj5qy2hkn"]
+[gd_scene load_steps=7 format=3 uid="uid://c3x8mj5qy2hkn"]
 
 [ext_resource type="Script" path="res://scripts/HUD.gd" id="1_hud"]
+[ext_resource type="Script" path="res://scripts/FlashOverlay.gd" id="2_flash"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_hud"]
 font_size = 18
@@ -247,3 +248,14 @@ text = "COMBAT COMPLETE"
 label_settings = SubResource("LabelSettings_summary")
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="FlashOverlay" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 1, 1, 0)
+script = ExtResource("2_flash")

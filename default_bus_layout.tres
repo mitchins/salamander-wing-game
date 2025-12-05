@@ -1,0 +1,49 @@
+[gd_resource type="AudioBusLayout" load_steps=3 format=3 uid="uid://dmp3210nvvyi"]
+
+[sub_resource type="AudioEffectBandPassFilter" id="AudioEffectFilter_comms_bp"]
+cutoff_hz = 1500.0
+resonance = 0.4
+gain = 1.0
+
+[sub_resource type="AudioEffectDistortion" id="AudioEffectDistortion_comms"]
+mode = 0
+pre_gain = 1.0
+keep_hf_hz = 8000.0
+drive = 0.15
+post_gain = 0.0
+
+[resource]
+bus/1/name = &"Music"
+bus/1/solo = false
+bus/1/mute = false
+bus/1/bypass_fx = false
+bus/1/volume_db = 0.0
+bus/1/send = &"Master"
+bus/2/name = &"SFX"
+bus/2/solo = false
+bus/2/mute = false
+bus/2/bypass_fx = false
+bus/2/volume_db = 0.0
+bus/2/send = &"Master"
+bus/3/name = &"VO"
+bus/3/solo = false
+bus/3/mute = false
+bus/3/bypass_fx = false
+bus/3/volume_db = 0.0
+bus/3/send = &"Master"
+bus/4/name = &"Comms"
+bus/4/solo = false
+bus/4/mute = false
+bus/4/bypass_fx = false
+bus/4/volume_db = 0.0
+bus/4/send = &"Master"
+bus/4/effect/0/effect = SubResource("AudioEffectFilter_comms_bp")
+bus/4/effect/0/enabled = true
+bus/4/effect/1/effect = SubResource("AudioEffectDistortion_comms")
+bus/4/effect/1/enabled = true
+bus/5/name = &"UI"
+bus/5/solo = false
+bus/5/mute = false
+bus/5/bypass_fx = false
+bus/5/volume_db = 0.0
+bus/5/send = &"Master"

@@ -51,6 +51,7 @@ func _on_evade_pressed() -> void:
 	if _choice_made:
 		return
 	_choice_made = true
+	_play_ui_sound()
 	choice_made.emit("evade")
 	queue_free()
 
@@ -58,5 +59,10 @@ func _on_hold_pressed() -> void:
 	if _choice_made:
 		return
 	_choice_made = true
+	_play_ui_sound()
 	choice_made.emit("hold")
 	queue_free()
+
+func _play_ui_sound() -> void:
+	if has_node("/root/Audio"):
+		get_node("/root/Audio").play_sfx("ui_blip")

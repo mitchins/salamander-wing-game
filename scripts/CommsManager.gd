@@ -41,7 +41,6 @@ const CHARACTERS := {
 var _panel: Node = null  # CommsPanel instance
 var _portraits_cache: Dictionary = {}
 var _message_queue: Array = []  # Queue of pending messages
-var _voice_player: AudioStreamPlayer = null
 
 const COMMS_PANEL_SCENE = preload("res://ui/CommsPanel.tscn")
 
@@ -49,11 +48,6 @@ func _ready() -> void:
 	# Instantiate CommsPanel and add to scene tree
 	_panel = COMMS_PANEL_SCENE.instantiate()
 	get_tree().root.call_deferred("add_child", _panel)
-	
-	# Set up voice player for future VO support
-	_voice_player = AudioStreamPlayer.new()
-	_voice_player.bus = "Master"  # Change to "VO" or "SFX" if those buses exist
-	add_child(_voice_player)
 
 func _process(_delta: float) -> void:
 	# Process message queue
@@ -74,11 +68,11 @@ func say(speaker_id: String, text: String, duration: float = DEFAULT_DURATION, a
 	# If panel is currently showing, queue this message
 	if _panel and _panel.is_showing():
 		_message_queue.append({
-			"speaker_id": speaker_id,
-			"text": text,
-			"duration": duration,
-			"audio_id": audio_id
-		})
+"speaker_id": speaker_id,
+"text": text,
+"duration": duration,
+"audio_id": audio_id
+})
 	else:
 		_show_message(speaker_id, text, duration, audio_id)
 
@@ -164,7 +158,19 @@ func _play_voice(audio_id: String) -> void:
 	if audio_id == "":
 		return
 	
-	var path := "res://vo/%s.ogg" % audio_id
-	if ResourceLoader.exists(path):
-		_voice_player.stream = load(path)
-		_voice_player.play()
+	# Try mp3 first (ElevenLabs output), then ogg as fallback
+	var paths := [
+		"res://audio/vo/%s.mp3" % audio_id,
+		"res://vo/%s.mp3" % audio_id,
+		"res://audio/vo/%s.ogg" % audio_id,
+		"res://vo/%s.ogg" % audio_id
+	]
+	
+	for path in paths:
+		if ResourceLoader.exists(path):
+			var stream: AudioStream = load(path)
+			Audio.play_comms_voice(stream)
+			print("Playing VO: %s" % path)
+			return
+	
+	push_warning("CommsManager: VO file not found for '%s'" % audio_id)

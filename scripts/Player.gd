@@ -88,6 +88,10 @@ func _fire() -> void:
 	get_tree().current_scene.add_child(bullet)
 	bullet.global_position = bullet_spawn_point.global_position
 	bullet.set_forward_speed(forward_speed)
+	
+	# Play laser SFX
+	if has_node("/root/Audio"):
+		get_node("/root/Audio").play_sfx_varied("player_laser", 0.95, 1.05)
 
 func take_damage(amount: int = 10) -> void:
 	if _game_controller:
@@ -98,6 +102,10 @@ func take_damage(amount: int = 10) -> void:
 		_flash_damage()
 	
 	trigger_camera_shake(0.4, 0.2)
+	
+	# Play shield hit SFX
+	if has_node("/root/Audio"):
+		get_node("/root/Audio").play_sfx("shield_hit")
 
 ## Camera shake for damage/impact feedback
 func trigger_camera_shake(intensity: float, duration: float) -> void:

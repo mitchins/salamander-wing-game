@@ -12,6 +12,7 @@ class_name HUD
 @onready var chatter_label: Label = $ChatterContainer/ChatterLabel
 @onready var combat_summary_container: PanelContainer = $CombatSummaryContainer
 @onready var combat_summary_label: Label = $CombatSummaryContainer/CombatSummaryLabel
+@onready var flash_overlay: ColorRect = $FlashOverlay
 
 var _carrier_flash_timer: float = 0.0
 var _carrier_flash_duration: float = 0.3
@@ -99,3 +100,16 @@ func show_combat_summary(text: String) -> void:
 func hide_combat_summary() -> void:
 	if combat_summary_container:
 		combat_summary_container.visible = false
+
+## Screen flash effects
+func flash_screen_damage() -> void:
+	if flash_overlay:
+		flash_overlay.flash_damage()
+
+func flash_screen_carrier() -> void:
+	if flash_overlay:
+		flash_overlay.flash_carrier_damage()
+
+func flash_screen_critical() -> void:
+	if flash_overlay:
+		flash_overlay.flash_critical()

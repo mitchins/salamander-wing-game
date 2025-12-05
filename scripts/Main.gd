@@ -41,12 +41,11 @@ var _kill_streak: int = 0
 var _last_kill_time: float = 0.0
 const KILL_STREAK_WINDOW: float = 2.0  # Seconds between kills for streak
 
-# Cinematic comms sequence (speaker_id, text, duration)
+# Cinematic comms sequence (speaker_id, text, duration, vo_id)
 var _cinematic_comms: Array = [
-	["RAZOR", "Alright Rider, stay sharp out there.", 2.5],
-	["RIDER", "Copy that. Sensors picking up movement ahead.", 2.5],
-	["RAZOR", "Don't get cocky. These bogeys are fast.", 2.5],
-	["RIDER", "Contact in 5... 4... 3...", 2.0],
+	["STONE", "Convoy Omega is all we've got left. You lose it, we lose the war.", 3.5, "stone_brief_01"],
+	["RAZOR", "Try not to shoot the friendlies this time, Rider.", 2.5, "razor_snark_01"],
+	["RIDER", "Contact in five... four... three...", 2.5, "rider_countdown_01"],
 ]
 var _comms_index: int = 0
 var _comms_timer: float = 0.0
@@ -134,7 +133,11 @@ func _update_cinematic(delta: float) -> void:
 		if _comms_timer > comms_interval:
 			_comms_timer = 0.0
 			var msg = _cinematic_comms[_comms_index]
-			Comms.say(msg[0], msg[1], msg[2])
+			# Support both old format (3 elements) and new format (4 elements with vo_id)
+			var vo_id := ""
+			if msg.size() > 3:
+				vo_id = msg[3]
+			Comms.say(msg[0], msg[1], msg[2], vo_id)
 			_comms_index += 1
 	
 	# Transition to QTE after duration
@@ -152,14 +155,18 @@ func _enter_qte() -> void:
 	# Slow time for dramatic effect
 	Engine.time_scale = 0.7
 	
-	# Comms: Vera announces incoming threat
-	Comms.say_immediate("VERA", "Incoming threat detected. Stand by for tactical options.", 3.0)
+	# Comms: Vera announces incoming threat (with VO)
+	Comms.say_immediate("VERA", "Incoming threat detected. Stand by for tactical options.", 3.0, "vera_contact_01")
 	
 	# Spawn QTE overlay
 	_qte_overlay = QTE_OVERLAY_SCENE.instantiate()
 	$HUDLayer.add_child(_qte_overlay)
 	_qte_overlay.choice_made.connect(_on_qte_choice)
 	_qte_overlay.start_countdown(qte_timeout)
+	
+	# Play UI blip for QTE popup
+	if has_node("/root/Audio"):
+		get_node("/root/Audio").play_sfx("ui_blip")
 
 func _update_qte(_delta: float) -> void:
 	# Timeout - auto-pick "hold" if no choice made
@@ -184,12 +191,12 @@ func _on_qte_choice(choice_id: String) -> void:
 			# Fewer enemies, but take a small scripted hit
 			enemy_spawner.configure_wave("evade")
 			game_controller.player_hit(10)  # Scripted graze damage
-			Comms.say_immediate("STONE", "You break formation, you own the fallout, Rider.", 2.5)
+			Comms.say_immediate("VERA", "Evading. You'll be alone out front for a few seconds.", 2.5, "vera_qte_evade_01")
 			player.trigger_camera_shake(0.3, 0.15)
 		"hold":
 			# More enemies, higher risk/reward
 			enemy_spawner.configure_wave("hold")
-			Comms.say_immediate("STONE", "Hold the line. No one turns tail on my watch.", 2.5)
+			Comms.say_immediate("VERA", "Holding course. Expect heavy intercept in your lane.", 2.5, "vera_qte_held_01")
 	
 	enter_state(State.COMBAT)
 
@@ -200,6 +207,10 @@ func _enter_combat() -> void:
 	player.input_enabled = true
 	enemy_spawner.spawning_enabled = true
 	hud.show_crosshair()
+	
+	# Start combat music
+	if has_node("/root/Audio"):
+		get_node("/root/Audio").play_music("sortie")
 	
 	# Enable wingman combat
 	if wingman and wingman.is_alive:
@@ -262,19 +273,25 @@ func _end_combat_window() -> void:
 	
 	hud.hide_combat_summary()
 	
-	# Post-combat comms based on performance
+	# Post-combat comms based on performance (with VO)
 	if escapes > 3:
-		Comms.say("STONE", "Too many got through. Tighten up, Rider!", 3.0)
+		Comms.say("STONE", "Too many bogeys passing us. Focus your fire, Lieutenant!", 3.0, "stone_chewout_01")
 	elif kills > 8:
-		Comms.say("SPARKS", "Now THAT'S what I call a turkey shoot!", 3.0)
+		Comms.say("SPARKS", "Minimal scorch marks. I can work with this.", 3.0, "sparks_post_ok_01")
+	elif damage_taken > 30:
+		Comms.say("SPARKS", "Next time you want vent art, ask before you shred the hull.", 3.0, "sparks_post_bad_01")
 	else:
-		Comms.say("SPARKS", "Ship's still in one piece... this time.", 3.0)
+		Comms.say("SPARKS", "Minimal scorch marks. I can work with this.", 3.0, "sparks_post_ok_01")
+	
+	# Fade music at end of combat
+	if has_node("/root/Audio"):
+		get_node("/root/Audio").fade_out_music(2.0)
 	
 	# Small delay before returning to cinematic
 	await get_tree().create_timer(2.0).timeout
 	
 	if wingman and wingman.is_alive:
-		Comms.say("RAZOR", "Good work, Rider. Returning to formation.", 2.5)
+		Comms.say("RAZOR", "Not terrible. For you.", 2.5, "razor_praise_01")
 	else:
 		Comms.say("STONE", "Razor's gone. Stay focused, Rider.", 2.5)
 	
@@ -328,7 +345,7 @@ func _on_carrier_threshold(threshold: int) -> void:
 		75:
 			Comms.say_immediate("VERA", "Warning: Carrier integrity at 75 percent.", 2.5)
 		50:
-			Comms.say_immediate("STONE", "Carrier's at half strength! Don't let any more through!", 3.0)
+			Comms.say_immediate("STONE", "Too many bogeys passing us. Focus your fire, Lieutenant!", 3.0, "stone_chewout_01")
 			player.trigger_camera_shake(0.3, 0.2)
 		25:
 			Comms.say_immediate("VERA", "CRITICAL: Carrier integrity failing. Recommend immediate defensive action.", 3.5)
