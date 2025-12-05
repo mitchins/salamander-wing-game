@@ -3,6 +3,7 @@ class_name EnemySpawner
 
 ## Spawns enemies ahead of the player at regular intervals
 ## Keeps track of active enemies to prevent overcrowding
+## Controlled by Main.gd state machine via spawning_enabled
 
 @export var enemy_scene: PackedScene
 @export var spawn_interval: float = 1.5  # Seconds between spawns
@@ -10,6 +11,9 @@ class_name EnemySpawner
 @export var spawn_distance: float = 80.0  # How far ahead to spawn
 @export var spawn_range_x: float = 6.0  # Horizontal spawn range
 @export var spawn_range_y: float = 4.0  # Vertical spawn range
+
+# Controlled by Main.gd based on game state
+var spawning_enabled: bool = false
 
 var _spawn_timer: float = 0.0
 var _player: Node3D = null
@@ -23,6 +27,10 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	if _game_controller and _game_controller.game_over:
+		return
+	
+	# Only spawn during COMBAT state
+	if not spawning_enabled:
 		return
 	
 	_spawn_timer += delta

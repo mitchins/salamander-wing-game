@@ -16,6 +16,9 @@ class_name Player
 @export var fire_rate: float = 0.15  # Seconds between shots
 @export var bullet_scene: PackedScene
 
+# Input control - set by Main.gd based on game state
+var input_enabled: bool = true
+
 # Internal state
 var _fire_cooldown: float = 0.0
 var _game_controller: Node = null
@@ -31,12 +34,13 @@ func _physics_process(delta: float) -> void:
 	if _game_controller and _game_controller.game_over:
 		return
 	
-	# Get input
+	# Get input only if enabled (COMBAT state)
 	var input_dir := Vector2.ZERO
-	input_dir.x = Input.get_axis("move_left", "move_right")
-	input_dir.y = Input.get_axis("move_down", "move_up")
+	if input_enabled:
+		input_dir.x = Input.get_axis("move_left", "move_right")
+		input_dir.y = Input.get_axis("move_down", "move_up")
 	
-	# Calculate velocity
+	# Calculate velocity - always move forward, lateral only with input
 	velocity.x = input_dir.x * move_speed
 	velocity.y = input_dir.y * move_speed
 	velocity.z = forward_speed
@@ -55,9 +59,9 @@ func _physics_process(delta: float) -> void:
 		target_rotation.x = -input_dir.y * 0.2  # Pitch when moving up/down
 		ship_mesh.rotation = ship_mesh.rotation.lerp(target_rotation, 10.0 * delta)
 	
-	# Handle firing
+	# Handle firing only if input enabled
 	_fire_cooldown -= delta
-	if Input.is_action_pressed("fire") and _fire_cooldown <= 0.0:
+	if input_enabled and Input.is_action_pressed("fire") and _fire_cooldown <= 0.0:
 		_fire()
 		_fire_cooldown = fire_rate
 

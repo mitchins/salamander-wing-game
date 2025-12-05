@@ -1,17 +1,24 @@
 # Salamander Wing - Tech Demo
 
-A 90s-style space rail shooter tech demo built in Godot 4, proving the engine can deliver a retro "Wing Commander / Terminal Velocity / Star Fox" aesthetic with CRT filtering, basic combat, and a chunky HUD.
+A 90s-style space rail shooter tech demo built in Godot 4, proving the engine can deliver a retro "Wing Commander / Terminal Velocity / Star Fox" aesthetic with:
+
+- CRT filtering
+- Cinematic rail segments with cockpit chatter
+- QTE-style decision moments
+- Short, intense dogfight windows
 
 ![Godot 4.3+](https://img.shields.io/badge/Godot-4.3+-blue)
 ![GDScript](https://img.shields.io/badge/Language-GDScript-green)
 
 ## Features
 
+- **State Machine Loop**: CINEMATIC → QTE → COMBAT → repeat
+- **Cinematic Autopilot**: Player watches the ship fly while radio chatter plays
+- **QTE Decision Points**: Timed choices (EVADE vs HOLD) that affect the combat window
+- **Combat Windows**: ~20 seconds of hands-on dogfighting
 - **Retro CRT Shader**: Barrel distortion, scanlines, noise/grain, and vignette
 - **Low-Resolution Rendering**: 480×320 SubViewport scaled up for authentic pixel look
-- **Rail Shooter Gameplay**: Constant forward movement with bounded lateral control
-- **Simple Combat**: Blaster bolts, enemy ships, explosions, score tracking
-- **Chunky HUD**: Shield meter, score display, and targeting crosshair
+- **Chunky HUD**: Shield meter, score display, targeting crosshair, and chatter text
 
 ## Requirements
 
@@ -25,6 +32,29 @@ A 90s-style space rail shooter tech demo built in Godot 4, proving the engine ca
 3. Open `scenes/Main.tscn`
 4. Press F5 or click Play
 
+## The Gameplay Loop
+
+The demo cycles through three states:
+
+1. **CINEMATIC** (~8 seconds)
+   - Ship flies on autopilot
+   - Radio chatter displays on screen
+   - Player cannot move or shoot
+   - Crosshair hidden
+
+2. **QTE** (~4 seconds timeout)
+   - Big overlay appears: "EVADE [1]" or "HOLD COURSE [2]"
+   - Press 1 or 2 (or click buttons) to choose
+   - **EVADE**: Fewer enemies spawn, but you take a small hit
+   - **HOLD**: More enemies, higher risk/reward
+   - If timeout expires, defaults to HOLD
+
+3. **COMBAT** (~20 seconds)
+   - Full player control restored
+   - Enemies spawn based on QTE choice
+   - Shoot to score points, avoid collisions
+   - After timer ends, back to CINEMATIC
+
 ## Controls
 
 | Action | Keys |
@@ -34,6 +64,8 @@ A 90s-style space rail shooter tech demo built in Godot 4, proving the engine ca
 | Move Left | A / Left Arrow |
 | Move Right | D / Right Arrow |
 | Fire | Space |
+| QTE: Evade | 1 |
+| QTE: Hold | 2 |
 
 ## Project Structure
 
@@ -51,23 +83,34 @@ salamander-wing-game/
 │   └── Explosion.tscn     # Explosion effect scene
 │
 ├── scripts/
-│   ├── Main.gd            # Main scene controller
+│   ├── Main.gd            # State machine + scene controller
 │   ├── Player.gd          # Player movement and firing
 │   ├── Enemy.gd           # Enemy behavior
 │   ├── Bullet.gd          # Projectile logic
 │   ├── Explosion.gd       # Explosion lifecycle
 │   ├── EnemySpawner.gd    # Enemy wave spawning
 │   ├── GameController.gd  # Score, shield, game state
+│   ├── QTEOverlay.gd      # QTE decision UI
+│   ├── HUD.gd             # HUD display logic
 │   └── Starfield.gd       # Procedural starfield background
 │
 ├── shaders/
 │   └── crt.gdshader       # CRT post-processing shader
 │
 └── ui/
-    └── HUD.tscn           # In-game HUD (shield, score, crosshair)
+    ├── HUD.tscn           # In-game HUD (shield, score, crosshair, chatter)
+    └── QTEOverlay.tscn    # QTE decision overlay
 ```
 
 ## Tweak Points
+
+### State Machine Timing
+In `scripts/Main.gd`:
+```gdscript
+@export var cinematic_duration: float = 8.0   # Seconds of autopilot
+@export var qte_timeout: float = 4.0          # Seconds to make QTE choice
+@export var combat_duration: float = 20.0     # Seconds of combat
+```
 
 ### SubViewport Resolution
 In `scenes/Main.tscn`, find the `GameViewport` SubViewport node:

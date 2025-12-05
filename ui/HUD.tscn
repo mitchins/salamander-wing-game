@@ -1,4 +1,4 @@
-[gd_scene load_steps=4 format=3 uid="uid://c3x8mj5qy2hkn"]
+[gd_scene load_steps=5 format=3 uid="uid://c3x8mj5qy2hkn"]
 
 [ext_resource type="Script" path="res://scripts/HUD.gd" id="1_hud"]
 
@@ -13,6 +13,12 @@ font_size = 48
 font_color = Color(1, 0.2, 0.2, 1)
 outline_size = 4
 outline_color = Color(0.2, 0, 0, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_chatter"]
+font_size = 20
+font_color = Color(0.8, 0.9, 1, 1)
+outline_size = 2
+outline_color = Color(0, 0.1, 0.2, 1)
 
 [node name="HUD" type="Control"]
 layout_mode = 3
@@ -184,3 +190,21 @@ text = "MISSION FAILED"
 label_settings = SubResource("LabelSettings_gameover")
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="ChatterContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -80.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_constants/margin_left = 40
+theme_override_constants/margin_bottom = 20
+
+[node name="ChatterLabel" type="Label" parent="ChatterContainer"]
+layout_mode = 2
+text = ""
+label_settings = SubResource("LabelSettings_chatter")
+horizontal_alignment = 1
