@@ -25,7 +25,14 @@ const QTE_OVERLAY_SCENE = preload("res://ui/QTEOverlay.tscn")
 # Timing settings (tweak these for pacing)
 @export var cinematic_duration: float = 8.0
 @export var qte_timeout: float = 4.0
-@export var combat_duration: float = 20.0
+@export var combat_duration: float = 18.0
+@export var summary_duration: float = 3.0
+
+# Combat results tracking
+var _combat_kills: int = 0
+var _combat_damage_taken: int = 0
+var _pre_combat_score: int = 0
+var _pre_combat_shield: int = 0
 
 # Chatter lines for cinematic segments
 var _chatter_lines: Array[String] = [
@@ -124,6 +131,9 @@ func _enter_qte() -> void:
 	player.input_enabled = false
 	enemy_spawner.spawning_enabled = false
 	
+	# Slow time for dramatic effect
+	Engine.time_scale = 0.7
+	
 	# Spawn QTE overlay
 	_qte_overlay = QTE_OVERLAY_SCENE.instantiate()
 	$HUDLayer.add_child(_qte_overlay)
@@ -144,18 +154,20 @@ func _on_qte_choice(choice_id: String) -> void:
 	print("[QTE] Choice made: %s" % choice_id)
 	last_qte_choice = choice_id
 	
+	# Restore normal time
+	Engine.time_scale = 1.0
+	
 	# Configure combat based on choice
 	match choice_id:
 		"evade":
-			# Fewer enemies, but take a small hit
-			enemy_spawner.spawn_interval = 2.5
-			enemy_spawner.max_enemies = 6
+			# Fewer enemies, but take a small scripted hit
+			enemy_spawner.configure_wave("evade")
 			game_controller.player_hit(10)  # Scripted graze damage
 			hud.show_chatter("RIDER: Breaking hard! Took a scrape...")
+			player.trigger_camera_shake(0.3, 0.15)
 		"hold":
 			# More enemies, higher risk/reward
-			enemy_spawner.spawn_interval = 1.2
-			enemy_spawner.max_enemies = 12
+			enemy_spawner.configure_wave("hold")
 			hud.show_chatter("RIDER: Holding course. Here they come!")
 	
 	enter_state(State.COMBAT)
@@ -167,6 +179,12 @@ func _enter_combat() -> void:
 	player.input_enabled = true
 	enemy_spawner.spawning_enabled = true
 	hud.show_crosshair()
+	
+	# Track combat stats
+	_combat_kills = 0
+	_combat_damage_taken = 0
+	_pre_combat_score = game_controller.score
+	_pre_combat_shield = game_controller.shield
 	
 	# Clear chatter after a moment
 	await get_tree().create_timer(2.0).timeout
@@ -180,7 +198,37 @@ func _update_combat(_delta: float) -> void:
 
 func _end_combat_window() -> void:
 	print("[COMBAT] Window ended")
+	
+	# Disable player input immediately
+	player.input_enabled = false
+	enemy_spawner.spawning_enabled = false
+	hud.hide_crosshair()
+	
+	# Calculate combat results
+	var score_gained = game_controller.score - _pre_combat_score
+	var damage_taken = _pre_combat_shield - game_controller.shield
+	
+	# Show combat summary based on QTE choice
+	var summary_text: String
+	match last_qte_choice:
+		"evade":
+			summary_text = "EVADE MANEUVER COMPLETE\nLight contact. Damage: %d | Score: +%d" % [damage_taken, score_gained]
+		"hold":
+			summary_text = "HELD THE LINE\nHeavy engagement. Damage: %d | Score: +%d" % [damage_taken, score_gained]
+		_:
+			summary_text = "ENGAGEMENT COMPLETE\nDamage: %d | Score: +%d" % [damage_taken, score_gained]
+	
+	hud.show_combat_summary(summary_text)
+	
+	# Wait for summary to display, then continue
+	await get_tree().create_timer(summary_duration).timeout
+	
+	hud.hide_combat_summary()
 	hud.show_chatter("RAZOR: Good work, Rider. Returning to formation.")
+	
+	# Small delay before returning to cinematic
+	await get_tree().create_timer(1.5).timeout
+	
 	enter_state(State.CINEMATIC)
 
 func _clear_enemies() -> void:

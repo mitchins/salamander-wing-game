@@ -19,16 +19,27 @@ class_name Player
 # Input control - set by Main.gd based on game state
 var input_enabled: bool = true
 
+# Camera shake
+var _shake_intensity: float = 0.0
+var _shake_duration: float = 0.0
+var _shake_timer: float = 0.0
+var _original_camera_transform: Transform3D
+
 # Internal state
 var _fire_cooldown: float = 0.0
 var _game_controller: Node = null
 
 @onready var bullet_spawn_point: Marker3D = $BulletSpawnPoint
 @onready var ship_mesh: Node3D = $ShipMesh
+@onready var camera: Camera3D = $Camera3D
 
 func _ready() -> void:
 	# Find game controller in parent hierarchy
 	_game_controller = get_tree().get_first_node_in_group("game_controller")
+	
+	# Store original camera transform for shake
+	if camera:
+		_original_camera_transform = camera.transform
 
 func _physics_process(delta: float) -> void:
 	if _game_controller and _game_controller.game_over:
@@ -64,6 +75,9 @@ func _physics_process(delta: float) -> void:
 	if input_enabled and Input.is_action_pressed("fire") and _fire_cooldown <= 0.0:
 		_fire()
 		_fire_cooldown = fire_rate
+	
+	# Update camera shake
+	_update_camera_shake(delta)
 
 func _fire() -> void:
 	if bullet_scene == null:
@@ -79,9 +93,38 @@ func take_damage(amount: int = 10) -> void:
 	if _game_controller:
 		_game_controller.player_hit(amount)
 	
-	# Visual feedback - flash the ship
+	# Visual feedback - flash the ship and shake camera
 	if ship_mesh:
 		_flash_damage()
+	
+	trigger_camera_shake(0.4, 0.2)
+
+## Camera shake for damage/impact feedback
+func trigger_camera_shake(intensity: float, duration: float) -> void:
+	_shake_intensity = intensity
+	_shake_duration = duration
+	_shake_timer = 0.0
+
+func _update_camera_shake(delta: float) -> void:
+	if not camera:
+		return
+	
+	if _shake_timer < _shake_duration:
+		_shake_timer += delta
+		var shake_progress = _shake_timer / _shake_duration
+		var current_intensity = _shake_intensity * (1.0 - shake_progress)
+		
+		# Apply random offset
+		var offset = Vector3(
+			randf_range(-current_intensity, current_intensity),
+			randf_range(-current_intensity, current_intensity),
+			0
+		)
+		camera.transform = _original_camera_transform
+		camera.position += offset
+	else:
+		# Reset to original
+		camera.transform = _original_camera_transform
 
 func _flash_damage() -> void:
 	# Quick red flash on damage

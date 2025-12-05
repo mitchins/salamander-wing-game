@@ -12,6 +12,9 @@ class_name EnemySpawner
 @export var spawn_range_x: float = 6.0  # Horizontal spawn range
 @export var spawn_range_y: float = 4.0  # Vertical spawn range
 
+# Enemy behavior modifiers (set by configure_wave)
+var enemy_speed_multiplier: float = 1.0
+
 # Controlled by Main.gd based on game state
 var spawning_enabled: bool = false
 
@@ -39,6 +42,30 @@ func _process(delta: float) -> void:
 		_spawn_timer = 0.0
 		_try_spawn_enemy()
 
+## Configure wave difficulty based on QTE choice
+func configure_wave(mode: String) -> void:
+	match mode:
+		"evade":
+			# Fewer, slower enemies - player took evasive action
+			spawn_interval = 2.5
+			max_enemies = 5
+			enemy_speed_multiplier = 0.7
+			print("[SPAWNER] Wave configured: EVADE (fewer/slower enemies)")
+		"hold":
+			# More, faster enemies - player engaged head-on
+			spawn_interval = 1.0
+			max_enemies = 12
+			enemy_speed_multiplier = 1.2
+			print("[SPAWNER] Wave configured: HOLD (more/faster enemies)")
+		_:
+			# Default
+			spawn_interval = 1.5
+			max_enemies = 8
+			enemy_speed_multiplier = 1.0
+	
+	# Reset spawn timer to start spawning immediately
+	_spawn_timer = spawn_interval
+
 func _try_spawn_enemy() -> void:
 	# Check enemy count
 	var current_enemies = get_tree().get_nodes_in_group("enemy").size()
@@ -63,6 +90,12 @@ func _try_spawn_enemy() -> void:
 	var enemy = enemy_scene.instantiate()
 	get_tree().current_scene.add_child(enemy)
 	enemy.global_position = spawn_pos
+	
+	# Apply speed multiplier from wave config
+	if enemy.has_method("set_speed_multiplier"):
+		enemy.set_speed_multiplier(enemy_speed_multiplier)
+	else:
+		enemy.drift_speed *= enemy_speed_multiplier
 	
 	# Random initial rotation for variety
 	enemy.rotation.y = randf_range(-0.5, 0.5)
