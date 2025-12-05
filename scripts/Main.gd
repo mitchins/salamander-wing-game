@@ -9,6 +9,7 @@ enum State { CINEMATIC, QTE, COMBAT }
 
 @onready var game_viewport: SubViewport = $SubViewportContainer/GameViewport
 @onready var player: Player = $SubViewportContainer/GameViewport/Player
+@onready var wingman: Wingman = $SubViewportContainer/GameViewport/Wingman
 @onready var game_controller: GameController = $GameController
 @onready var enemy_spawner: EnemySpawner = $SubViewportContainer/GameViewport/EnemySpawner
 @onready var hud: Control = $HUDLayer/HUD
@@ -33,6 +34,12 @@ var _combat_kills: int = 0
 var _combat_damage_taken: int = 0
 var _pre_combat_score: int = 0
 var _pre_combat_shield: int = 0
+var _pre_combat_carrier: int = 0
+
+# Kill streak tracking for comms
+var _kill_streak: int = 0
+var _last_kill_time: float = 0.0
+const KILL_STREAK_WINDOW: float = 2.0  # Seconds between kills for streak
 
 # Cinematic comms sequence (speaker_id, text, duration)
 var _cinematic_comms: Array = [
@@ -50,6 +57,15 @@ func _ready() -> void:
 	
 	# Add player to group for easy finding
 	player.add_to_group("player")
+	
+	# Connect game controller signals for comms
+	game_controller.enemy_killed_signal.connect(_on_enemy_killed)
+	game_controller.enemy_escaped_signal.connect(_on_enemy_escaped)
+	game_controller.carrier_threshold_crossed.connect(_on_carrier_threshold)
+	
+	# Connect wingman death
+	if wingman:
+		wingman.wingman_killed.connect(_on_wingman_killed)
 	
 	# Start in cinematic mode
 	enter_state(State.CINEMATIC)
@@ -185,11 +201,20 @@ func _enter_combat() -> void:
 	enemy_spawner.spawning_enabled = true
 	hud.show_crosshair()
 	
+	# Enable wingman combat
+	if wingman and wingman.is_alive:
+		wingman.set_combat_enabled(true)
+	
+	# Reset combat tracking
+	game_controller.reset_combat_tracking()
+	_kill_streak = 0
+	
 	# Track combat stats
 	_combat_kills = 0
 	_combat_damage_taken = 0
 	_pre_combat_score = game_controller.score
 	_pre_combat_shield = game_controller.shield
+	_pre_combat_carrier = game_controller.carrier_integrity
 	
 	# Clear any pending comms after a moment
 	await get_tree().create_timer(2.5).timeout
@@ -209,19 +234,26 @@ func _end_combat_window() -> void:
 	enemy_spawner.spawning_enabled = false
 	hud.hide_crosshair()
 	
+	# Disable wingman combat
+	if wingman and wingman.is_alive:
+		wingman.set_combat_enabled(false)
+	
 	# Calculate combat results
 	var score_gained = game_controller.score - _pre_combat_score
 	var damage_taken = _pre_combat_shield - game_controller.shield
+	var carrier_damage = _pre_combat_carrier - game_controller.carrier_integrity
+	var kills = game_controller.enemies_killed_this_combat
+	var escapes = game_controller.enemies_escaped_this_combat
 	
 	# Show combat summary based on QTE choice
 	var summary_text: String
 	match last_qte_choice:
 		"evade":
-			summary_text = "EVADE MANEUVER COMPLETE\nLight contact. Damage: %d | Score: +%d" % [damage_taken, score_gained]
+			summary_text = "EVADE MANEUVER COMPLETE\nKills: %d | Escaped: %d\nDamage: %d | Carrier: -%d | Score: +%d" % [kills, escapes, damage_taken, carrier_damage, score_gained]
 		"hold":
-			summary_text = "HELD THE LINE\nHeavy engagement. Damage: %d | Score: +%d" % [damage_taken, score_gained]
+			summary_text = "HELD THE LINE\nKills: %d | Escaped: %d\nDamage: %d | Carrier: -%d | Score: +%d" % [kills, escapes, damage_taken, carrier_damage, score_gained]
 		_:
-			summary_text = "ENGAGEMENT COMPLETE\nDamage: %d | Score: +%d" % [damage_taken, score_gained]
+			summary_text = "ENGAGEMENT COMPLETE\nKills: %d | Escaped: %d\nDamage: %d | Carrier: -%d | Score: +%d" % [kills, escapes, damage_taken, carrier_damage, score_gained]
 	
 	hud.show_combat_summary(summary_text)
 	
@@ -229,12 +261,22 @@ func _end_combat_window() -> void:
 	await get_tree().create_timer(summary_duration).timeout
 	
 	hud.hide_combat_summary()
-	Comms.say("SPARKS", "Ship's still in one piece... this time.", 3.0)
+	
+	# Post-combat comms based on performance
+	if escapes > 3:
+		Comms.say("STONE", "Too many got through. Tighten up, Rider!", 3.0)
+	elif kills > 8:
+		Comms.say("SPARKS", "Now THAT'S what I call a turkey shoot!", 3.0)
+	else:
+		Comms.say("SPARKS", "Ship's still in one piece... this time.", 3.0)
 	
 	# Small delay before returning to cinematic
 	await get_tree().create_timer(2.0).timeout
 	
-	Comms.say("RAZOR", "Good work, Rider. Returning to formation.", 2.5)
+	if wingman and wingman.is_alive:
+		Comms.say("RAZOR", "Good work, Rider. Returning to formation.", 2.5)
+	else:
+		Comms.say("STONE", "Razor's gone. Stay focused, Rider.", 2.5)
 	
 	await get_tree().create_timer(1.5).timeout
 	
@@ -244,3 +286,54 @@ func _clear_enemies() -> void:
 	var enemies = get_tree().get_nodes_in_group("enemy")
 	for enemy in enemies:
 		enemy.queue_free()
+
+## Event handlers for comms
+
+func _on_enemy_killed(_enemy: Enemy) -> void:
+	# Track kill streaks
+	var current_time = Time.get_ticks_msec() / 1000.0
+	if current_time - _last_kill_time < KILL_STREAK_WINDOW:
+		_kill_streak += 1
+	else:
+		_kill_streak = 1
+	_last_kill_time = current_time
+	
+	# Comms for kill streaks (only during combat to avoid spam)
+	if state == State.COMBAT:
+		if _kill_streak == 3:
+			Comms.say("RAZOR", "Nice shooting, Rider!", 1.5)
+		elif _kill_streak == 5:
+			Comms.say("SPARKS", "Five in a row! Keep it up!", 1.5)
+		elif _kill_streak >= 7:
+			Comms.say("VERA", "Impressive kill streak detected.", 1.5)
+
+func _on_enemy_escaped(_enemy: Enemy) -> void:
+	# Reset kill streak on escape
+	_kill_streak = 0
+	
+	# Comms for escapes (limited to avoid spam)
+	if state == State.COMBAT:
+		var escapes = game_controller.enemies_escaped_this_combat
+		if escapes == 2:
+			Comms.say("RAZOR", "They're getting through! Watch your six!", 2.0)
+		elif escapes == 4:
+			Comms.say("STONE", "Too many bogeys passing us. Focus fire!", 2.0)
+	
+	# Camera shake on carrier damage
+	player.trigger_camera_shake(0.15, 0.1)
+
+func _on_carrier_threshold(threshold: int) -> void:
+	# Major comms warnings at carrier damage thresholds
+	match threshold:
+		75:
+			Comms.say_immediate("VERA", "Warning: Carrier integrity at 75 percent.", 2.5)
+		50:
+			Comms.say_immediate("STONE", "Carrier's at half strength! Don't let any more through!", 3.0)
+			player.trigger_camera_shake(0.3, 0.2)
+		25:
+			Comms.say_immediate("VERA", "CRITICAL: Carrier integrity failing. Recommend immediate defensive action.", 3.5)
+			player.trigger_camera_shake(0.5, 0.3)
+
+func _on_wingman_killed() -> void:
+	# Already handled in Wingman.gd with Comms, but we can add player shake
+	player.trigger_camera_shake(0.6, 0.4)

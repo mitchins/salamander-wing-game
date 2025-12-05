@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://dkn4x8wm7q3hp"]
+[gd_scene load_steps=11 format=3 uid="uid://dkn4x8wm7q3hp"]
 
 [ext_resource type="Script" path="res://scripts/Main.gd" id="1_main"]
 [ext_resource type="Script" path="res://scripts/GameController.gd" id="2_gamecontroller"]
@@ -8,6 +8,7 @@
 [ext_resource type="PackedScene" uid="uid://dq8hjk2n5v7pm" path="res://scenes/Enemy.tscn" id="6_enemy"]
 [ext_resource type="PackedScene" uid="uid://c3x8mj5qy2hkn" path="res://ui/HUD.tscn" id="7_hud"]
 [ext_resource type="Script" path="res://scripts/Starfield.gd" id="8_starfield"]
+[ext_resource type="PackedScene" uid="uid://bwingman_razor" path="res://scenes/Wingman.tscn" id="9_wingman"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_crt"]
 shader = ExtResource("3_crt")
@@ -67,6 +68,9 @@ shadow_enabled = false
 
 [node name="Player" parent="SubViewportContainer/GameViewport" instance=ExtResource("4_player")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="Wingman" parent="SubViewportContainer/GameViewport" instance=ExtResource("9_wingman")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, -0.5, 2)
 
 [node name="EnemySpawner" type="Node3D" parent="SubViewportContainer/GameViewport"]
 script = ExtResource("5_spawner")

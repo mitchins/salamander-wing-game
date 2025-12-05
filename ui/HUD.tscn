@@ -8,6 +8,12 @@ font_color = Color(0.2, 1.0, 0.3, 1)
 outline_size = 1
 outline_color = Color(0, 0.15, 0.05, 1)
 
+[sub_resource type="LabelSettings" id="LabelSettings_carrier"]
+font_size = 18
+font_color = Color(0.2, 0.9, 1.0, 1)
+outline_size = 1
+outline_color = Color(0, 0.1, 0.15, 1)
+
 [sub_resource type="LabelSettings" id="LabelSettings_gameover"]
 font_size = 32
 font_color = Color(1, 0.15, 0.15, 1)
@@ -55,6 +61,11 @@ label_settings = SubResource("LabelSettings_hud")
 layout_mode = 2
 text = "SCORE: 0000"
 label_settings = SubResource("LabelSettings_hud")
+
+[node name="CarrierLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "CARRIER: 100"
+label_settings = SubResource("LabelSettings_carrier")
 
 [node name="Crosshair" type="Control" parent="."]
 layout_mode = 1
