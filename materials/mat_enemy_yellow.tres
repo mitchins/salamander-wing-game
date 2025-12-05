@@ -1,0 +1,7 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://cmat_enemy_yel94"]
+
+[resource]
+resource_name = "mat_enemy_yellow"
+albedo_color = Color(0.7, 0.6, 0.15, 1)
+metallic = 0.0
+roughness = 1.0

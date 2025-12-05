@@ -3,16 +3,16 @@
 [ext_resource type="Script" path="res://scripts/QTEOverlay.gd" id="1_qte"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_countdown"]
-font_size = 32
-font_color = Color(1, 1, 0.3, 1)
-outline_size = 3
-outline_color = Color(0.2, 0.2, 0, 1)
+font_size = 24
+font_color = Color(1, 0.75, 0.2, 1)
+outline_size = 2
+outline_color = Color(0.2, 0.12, 0, 1)
 
 [sub_resource type="LabelSettings" id="LabelSettings_button"]
-font_size = 28
-font_color = Color(1, 1, 1, 1)
-outline_size = 2
-outline_color = Color(0, 0, 0, 1)
+font_size = 18
+font_color = Color(0.8, 0.8, 0.8, 1)
+outline_size = 1
+outline_color = Color(0.1, 0.1, 0.1, 1)
 
 [node name="QTEOverlay" type="Control"]
 layout_mode = 3
@@ -30,7 +30,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0, 0, 0, 0.6)
+color = Color(0, 0, 0.02, 0.7)
 
 [node name="CenterContainer" type="CenterContainer" parent="."]
 layout_mode = 1
@@ -61,15 +61,15 @@ custom_minimum_size = Vector2(0, 20)
 layout_mode = 2
 
 [node name="EvadeButton" type="Button" parent="CenterContainer/VBoxContainer"]
-custom_minimum_size = Vector2(300, 60)
+custom_minimum_size = Vector2(280, 50)
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 18
 text = "[1] EVADE - Break formation"
 
 [node name="HoldButton" type="Button" parent="CenterContainer/VBoxContainer"]
-custom_minimum_size = Vector2(300, 60)
+custom_minimum_size = Vector2(280, 50)
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 18
 text = "[2] HOLD COURSE - Engage head-on"
 
 [node name="HintLabel" type="Label" parent="CenterContainer/VBoxContainer"]

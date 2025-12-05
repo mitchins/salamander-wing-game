@@ -1,45 +1,38 @@
-[gd_scene load_steps=5 format=3 uid="uid://bxp4n8kw2mtjy"]
+[gd_scene load_steps=4 format=3 uid="uid://bxp4n8kw2mtjy"]
 
 [ext_resource type="Script" path="res://scripts/Explosion.gd" id="1_explosion"]
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_particle"]
-vertex_color_use_as_albedo = true
-albedo_color = Color(1, 0.6, 0.2, 1)
-emission_enabled = true
-emission = Color(1, 0.5, 0.1, 1)
-emission_energy_multiplier = 3.0
-billboard_mode = 3
+[ext_resource type="Material" uid="uid://cmat_explosion94" path="res://materials/mat_explosion.tres" id="2_explosion_mat"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_particle"]
-size = Vector3(0.3, 0.3, 0.3)
+size = Vector3(0.25, 0.25, 0.25)
 
 [sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_explosion"]
 emission_shape = 1
 emission_sphere_radius = 0.3
 direction = Vector3(0, 0, 0)
 spread = 180.0
-initial_velocity_min = 5.0
-initial_velocity_max = 12.0
+initial_velocity_min = 4.0
+initial_velocity_max = 10.0
 gravity = Vector3(0, 0, 0)
-scale_min = 0.5
-scale_max = 1.5
-color = Color(1, 0.7, 0.3, 1)
-color_ramp = null
+scale_min = 0.4
+scale_max = 1.2
+color = Color(0.9, 0.6, 0.25, 1)
 
 [node name="Explosion" type="Node3D"]
 script = ExtResource("1_explosion")
 
 [node name="GPUParticles3D" type="GPUParticles3D" parent="."]
 emitting = false
-amount = 20
-lifetime = 0.6
+amount = 16
+lifetime = 0.5
 one_shot = true
 explosiveness = 1.0
 process_material = SubResource("ParticleProcessMaterial_explosion")
 draw_pass_1 = SubResource("BoxMesh_particle")
+material_override = ExtResource("2_explosion_mat")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="."]
-light_color = Color(1, 0.6, 0.2, 1)
-light_energy = 3.0
-omni_range = 5.0
+light_color = Color(0.9, 0.5, 0.15, 1)
+light_energy = 2.0
+omni_range = 4.0
 omni_attenuation = 2.0

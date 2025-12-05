@@ -3,28 +3,28 @@
 [ext_resource type="Script" path="res://scripts/HUD.gd" id="1_hud"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_hud"]
-font_size = 24
-font_color = Color(0.2, 1, 0.4, 1)
-outline_size = 2
-outline_color = Color(0, 0.2, 0.1, 1)
+font_size = 18
+font_color = Color(0.2, 1.0, 0.3, 1)
+outline_size = 1
+outline_color = Color(0, 0.15, 0.05, 1)
 
 [sub_resource type="LabelSettings" id="LabelSettings_gameover"]
-font_size = 48
-font_color = Color(1, 0.2, 0.2, 1)
-outline_size = 4
-outline_color = Color(0.2, 0, 0, 1)
+font_size = 32
+font_color = Color(1, 0.15, 0.15, 1)
+outline_size = 2
+outline_color = Color(0.25, 0, 0, 1)
 
 [sub_resource type="LabelSettings" id="LabelSettings_chatter"]
-font_size = 20
-font_color = Color(0.8, 0.9, 1, 1)
-outline_size = 2
-outline_color = Color(0, 0.1, 0.2, 1)
+font_size = 16
+font_color = Color(1.0, 0.75, 0.2, 1)
+outline_size = 1
+outline_color = Color(0.2, 0.12, 0, 1)
 
 [sub_resource type="LabelSettings" id="LabelSettings_summary"]
-font_size = 28
-font_color = Color(1, 0.9, 0.3, 1)
-outline_size = 3
-outline_color = Color(0.2, 0.15, 0, 1)
+font_size = 20
+font_color = Color(0.2, 1.0, 0.3, 1)
+outline_size = 2
+outline_color = Color(0, 0.15, 0.05, 1)
 
 [node name="HUD" type="Control"]
 layout_mode = 3
@@ -83,7 +83,7 @@ offset_right = 20.0
 offset_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.2, 1, 0.4, 0.8)
+color = Color(0.15, 0.9, 0.25, 0.7)
 
 [node name="VLine" type="ColorRect" parent="Crosshair"]
 layout_mode = 1
@@ -98,7 +98,7 @@ offset_right = 1.0
 offset_bottom = 20.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.2, 1, 0.4, 0.8)
+color = Color(0.15, 0.9, 0.25, 0.7)
 
 [node name="CenterDot" type="ColorRect" parent="Crosshair"]
 layout_mode = 1
@@ -113,7 +113,7 @@ offset_right = 3.0
 offset_bottom = 3.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(1, 1, 0.3, 1)
+color = Color(0.9, 0.9, 0.2, 1)
 
 [node name="CornerTL" type="ColorRect" parent="Crosshair"]
 layout_mode = 0
@@ -121,7 +121,7 @@ offset_left = -5.0
 offset_top = -5.0
 offset_right = 5.0
 offset_bottom = -3.0
-color = Color(0.2, 1, 0.4, 0.6)
+color = Color(0.15, 0.9, 0.25, 0.5)
 
 [node name="CornerTL2" type="ColorRect" parent="Crosshair"]
 layout_mode = 0
@@ -129,7 +129,7 @@ offset_left = -5.0
 offset_top = -5.0
 offset_right = -3.0
 offset_bottom = 5.0
-color = Color(0.2, 1, 0.4, 0.6)
+color = Color(0.15, 0.9, 0.25, 0.5)
 
 [node name="CornerTR" type="ColorRect" parent="Crosshair"]
 layout_mode = 0
@@ -137,7 +137,7 @@ offset_left = 55.0
 offset_top = -5.0
 offset_right = 65.0
 offset_bottom = -3.0
-color = Color(0.2, 1, 0.4, 0.6)
+color = Color(0.15, 0.9, 0.25, 0.5)
 
 [node name="CornerTR2" type="ColorRect" parent="Crosshair"]
 layout_mode = 0
@@ -145,7 +145,7 @@ offset_left = 63.0
 offset_top = -5.0
 offset_right = 65.0
 offset_bottom = 5.0
-color = Color(0.2, 1, 0.4, 0.6)
+color = Color(0.15, 0.9, 0.25, 0.5)
 
 [node name="CornerBL" type="ColorRect" parent="Crosshair"]
 layout_mode = 0
@@ -153,7 +153,7 @@ offset_left = -5.0
 offset_top = 63.0
 offset_right = 5.0
 offset_bottom = 65.0
-color = Color(0.2, 1, 0.4, 0.6)
+color = Color(0.15, 0.9, 0.25, 0.5)
 
 [node name="CornerBL2" type="ColorRect" parent="Crosshair"]
 layout_mode = 0
@@ -161,7 +161,7 @@ offset_left = -5.0
 offset_top = 55.0
 offset_right = -3.0
 offset_bottom = 65.0
-color = Color(0.2, 1, 0.4, 0.6)
+color = Color(0.15, 0.9, 0.25, 0.5)
 
 [node name="CornerBR" type="ColorRect" parent="Crosshair"]
 layout_mode = 0
@@ -169,7 +169,7 @@ offset_left = 55.0
 offset_top = 63.0
 offset_right = 65.0
 offset_bottom = 65.0
-color = Color(0.2, 1, 0.4, 0.6)
+color = Color(0.15, 0.9, 0.25, 0.5)
 
 [node name="CornerBR2" type="ColorRect" parent="Crosshair"]
 layout_mode = 0
@@ -177,7 +177,7 @@ offset_left = 63.0
 offset_top = 55.0
 offset_right = 65.0
 offset_bottom = 65.0
-color = Color(0.2, 1, 0.4, 0.6)
+color = Color(0.15, 0.9, 0.25, 0.5)
 
 [node name="GameOverLabel" type="Label" parent="."]
 layout_mode = 1

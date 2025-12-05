@@ -1,16 +1,31 @@
 # Salamander Wing - Rail Shooter Vignette
 
-A 90s-style space rail shooter tech demo built in Godot 4, proving the engine can deliver a retro "Wing Commander / Terminal Velocity / Star Fox" aesthetic with:
+A **"lovingly shitty 1994 Descent-era"** space rail shooter tech demo built in Godot 4. This project demonstrates authentic low-poly 3D aesthetics running on modern hardware:
 
-- CRT filtering
-- Cinematic rail segments with cockpit chatter
-- QTE-style decision moments that **meaningfully affect gameplay**
-- Short, intense dogfight windows
-- Combat summary and scoring feedback
-- Camera shake for impact
+- True 3D low-poly ships (not sprites), very simple meshes ~150 triangles
+- Flat/simple lighting, tiny color palette, no PBR or modern post-processing
+- 480×320 "console" render with tasteful CRT / color banding effects
+- Crisp HUD text in neon green / amber 90s debug style
 
 ![Godot 4.3+](https://img.shields.io/badge/Godot-4.3+-blue)
 ![GDScript](https://img.shields.io/badge/Language-GDScript-green)
+
+## The 1994 Aesthetic
+
+This build deliberately targets a **Descent / Wing Commander 3** visual feel:
+
+### What Makes It "1994"
+- **No HDR, bloom, or glow** - Linear tonemapping only
+- **Flat materials** - `metallic = 0.0`, `roughness = 1.0`, albedo only
+- **Tiny palette** - 5-6 solid colors for all ships (muted green, red, yellow, grey, cockpit blue)
+- **Simple lighting** - One directional "key" light, no shadows, gentle Gouraud-style gradients
+- **Color banding** - CRT shader posterizes to ~16 color levels per channel with ordered dithering
+- **Scanlines** - Subtle horizontal darkening every other pixel row
+- **Starfield skybox** - Follows camera on a sphere, doesn't zoom, just rotates slowly
+
+### Ships
+- **Player**: Chunky nose cone, swept wings, tail fin, twin engines (~120 triangles)
+- **Enemy**: Twin-hull "fork" design with forward-swept wings, yellow hazard stripes (~100 triangles)
 
 ## Features
 
@@ -22,9 +37,9 @@ A 90s-style space rail shooter tech demo built in Godot 4, proving the engine ca
 - **Combat Summary**: End-of-window debrief showing damage taken and score gained
 - **Time Scale Drama**: Slow-motion during QTE for cinematic tension
 - **Camera Shake**: Impact feedback on damage
-- **Retro CRT Shader**: Barrel distortion, scanlines, noise/grain, and vignette
+- **Retro CRT Shader**: Barrel distortion, scanlines, color banding, and vignette
 - **Low-Resolution Rendering**: 480×320 SubViewport scaled up for authentic pixel look
-- **Chunky HUD**: Shield meter, score display, targeting crosshair, chatter text, and summary panel
+- **Chunky HUD**: Shield/score in neon green, chatter in amber, crisp over CRT view
 
 ## Requirements
 
@@ -88,16 +103,25 @@ salamander-wing-game/
 ├── icon.svg               # Project icon
 ├── README.md              # This file
 │
+├── materials/             # 1994-style flat materials (no PBR)
+│   ├── mat_player_hull.tres
+│   ├── mat_cockpit.tres
+│   ├── mat_enemy_red.tres
+│   ├── mat_enemy_yellow.tres
+│   ├── mat_neutral_grey.tres
+│   ├── mat_bullet.tres
+│   └── mat_explosion.tres
+│
 ├── scenes/
 │   ├── Main.tscn          # Main game scene (run this)
-│   ├── Player.tscn        # Player ship scene
-│   ├── Enemy.tscn         # Enemy ship scene
-│   ├── Bullet.tscn        # Player projectile scene
-│   └── Explosion.tscn     # Explosion effect scene
+│   ├── Player.tscn        # Player ship (~120 triangles)
+│   ├── Enemy.tscn         # Enemy ship (~100 triangles)
+│   ├── Bullet.tscn        # Player projectile
+│   └── Explosion.tscn     # Explosion particles
 │
 ├── scripts/
 │   ├── Main.gd            # State machine + scene controller
-│   ├── Player.gd          # Player movement and firing
+│   ├── Player.gd          # Player movement, firing, camera shake
 │   ├── Enemy.gd           # Enemy behavior
 │   ├── Bullet.gd          # Projectile logic
 │   ├── Explosion.gd       # Explosion lifecycle
@@ -105,13 +129,13 @@ salamander-wing-game/
 │   ├── GameController.gd  # Score, shield, game state
 │   ├── QTEOverlay.gd      # QTE decision UI
 │   ├── HUD.gd             # HUD display logic
-│   └── Starfield.gd       # Procedural starfield background
+│   └── Starfield.gd       # Infinite spherical starfield
 │
 ├── shaders/
-│   └── crt.gdshader       # CRT post-processing shader
+│   └── crt.gdshader       # CRT shader with color banding
 │
 └── ui/
-    ├── HUD.tscn           # In-game HUD (shield, score, crosshair, chatter)
+    ├── HUD.tscn           # In-game HUD (neon green stats, amber chatter)
     └── QTEOverlay.tscn    # QTE decision overlay
 ```
 
@@ -146,17 +170,58 @@ In `scenes/Main.tscn`, find the `GameViewport` SubViewport node:
 size = Vector2i(480, 320)  # Change for different internal resolution
 ```
 
-### CRT Shader Intensity
-In `scenes/Main.tscn`, find the `SubViewportContainer` material shader parameters:
+### CRT Shader Settings
+In `scenes/Main.tscn`, the SubViewportContainer material shader parameters:
 ```gdshader
-barrel_distortion = 0.08    # 0.0 - 0.3 (lens curvature)
-scanline_intensity = 0.12   # 0.0 - 1.0 (scanline visibility)
+barrel_distortion = 0.06    # 0.0 - 0.3 (lens curvature, keep low)
+vignette_intensity = 0.2    # 0.0 - 1.0 (corner darkening)
+scanline_intensity = 0.18   # 0.0 - 1.0 (horizontal line darkness)
 scanline_count = 320.0      # Match vertical resolution
-noise_intensity = 0.025     # 0.0 - 0.2 (film grain)
-vignette_intensity = 0.25   # 0.0 - 1.0 (corner darkening)
-brightness = 1.05           # 0.8 - 1.2
-saturation = 1.1            # 0.5 - 1.5
+color_depth = 16.0          # 2.0 - 32.0 (posterization levels per channel)
+dither_strength = 0.02      # 0.0 - 1.0 (ordered dither amount)
+noise_intensity = 0.02      # 0.0 - 0.15 (film grain)
+brightness = 1.0            # 0.8 - 1.2
+saturation = 1.05           # 0.5 - 1.5
+contrast = 1.05             # 0.8 - 1.3
 ```
+
+### Palette Materials
+All ship materials are in `materials/` with:
+```gdscript
+metallic = 0.0
+roughness = 1.0
+# No textures, no normal maps - just albedo_color
+```
+
+Edit colors directly in the `.tres` files:
+- `mat_player_hull.tres` - Muted green `Color(0.25, 0.45, 0.3)`
+- `mat_cockpit.tres` - Dark grey-blue `Color(0.15, 0.18, 0.25)`
+- `mat_enemy_red.tres` - Desaturated red `Color(0.55, 0.2, 0.18)`
+- `mat_enemy_yellow.tres` - Hazard yellow `Color(0.7, 0.6, 0.15)`
+- `mat_neutral_grey.tres` - Generic metal `Color(0.35, 0.35, 0.38)`
+
+### Lighting
+In `scenes/Main.tscn`:
+```gdscript
+# DirectionalLight3D (key light)
+light_energy = 0.9  # Keep modest, not washed out
+shadow_enabled = false  # 1994 didn't have realtime shadows
+
+# Environment (ambient)
+ambient_light_energy = 0.4
+ambient_light_color = Color(0.08, 0.08, 0.12)  # Very dark blue
+glow_enabled = false
+tonemap_mode = 0  # Linear
+```
+
+### Starfield
+In `scripts/Starfield.gd`:
+```gdscript
+@export var star_count: int = 150
+@export var sphere_radius: float = 80.0
+@export var rotation_speed: float = 0.02  # Slow drift
+```
+Stars are placed on a sphere that follows the camera - they never zoom in or out, just rotate slowly for parallax.
 
 ### Player Settings
 In `scripts/Player.gd`:
@@ -196,8 +261,16 @@ In `scripts/Enemy.gd`:
   - Layer 1: Player
   - Layer 2: Enemies
   - Layer 3: Player bullets
-- All ships use simple BoxMesh primitives for authentic low-poly look
-- Starfield uses procedural mesh generation for infinite scrolling
+- All ships use simple primitive meshes (BoxMesh, PrismMesh) - no imported 3D models
+- Starfield uses a spherical distribution that follows the camera, providing infinite parallax without zooming
+- Materials use `metallic = 0.0` and `roughness = 1.0` for flat 1994-era shading
+- No shadows, no HDR, no bloom - deliberately basic rendering
+
+## Visual Philosophy
+
+When in doubt between "more realistic" and "more 1994," always choose **more 1994**.
+
+The goal is **"lovingly shitty"** - clearly low-budget, chunky, but consistent and readable. Think Gouraud shading, not PBR. Think DOS games, not Unreal Engine 5.
 
 ## Future Improvements (Not in this tech demo)
 

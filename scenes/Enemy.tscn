@@ -1,29 +1,37 @@
-[gd_scene load_steps=8 format=3 uid="uid://dq8hjk2n5v7pm"]
+[gd_scene load_steps=6 format=3 uid="uid://dq8hjk2n5v7pm"]
 
 [ext_resource type="Script" path="res://scripts/Enemy.gd" id="1_enemy"]
 [ext_resource type="PackedScene" uid="uid://bxp4n8kw2mtjy" path="res://scenes/Explosion.tscn" id="2_explosion"]
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_enemy_body"]
-albedo_color = Color(0.7, 0.2, 0.2, 1)
-metallic = 0.4
-roughness = 0.6
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_enemy_cockpit"]
-albedo_color = Color(0.3, 0.1, 0.1, 1)
-metallic = 0.6
-roughness = 0.3
+[ext_resource type="Material" uid="uid://cmat_enemy_red94" path="res://materials/mat_enemy_red.tres" id="3_red"]
+[ext_resource type="Material" uid="uid://cmat_enemy_yel94" path="res://materials/mat_enemy_yellow.tres" id="4_yellow"]
+[ext_resource type="Material" uid="uid://cmat_cockpit_94" path="res://materials/mat_cockpit.tres" id="5_cockpit"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_enemy"]
-size = Vector3(1.5, 0.5, 1.2)
+size = Vector3(1.6, 0.5, 1.4)
 
-[sub_resource type="BoxMesh" id="BoxMesh_enemy_body"]
-size = Vector3(0.8, 0.35, 1.0)
+[sub_resource type="BoxMesh" id="BoxMesh_hull_left"]
+size = Vector3(0.28, 0.32, 1.1)
 
-[sub_resource type="BoxMesh" id="BoxMesh_enemy_cockpit"]
-size = Vector3(0.3, 0.2, 0.3)
+[sub_resource type="BoxMesh" id="BoxMesh_hull_right"]
+size = Vector3(0.28, 0.32, 1.1)
 
-[sub_resource type="BoxMesh" id="BoxMesh_enemy_wing"]
-size = Vector3(0.5, 0.1, 0.4)
+[sub_resource type="BoxMesh" id="BoxMesh_center"]
+size = Vector3(0.4, 0.2, 0.5)
+
+[sub_resource type="PrismMesh" id="PrismMesh_nose_left"]
+size = Vector3(0.22, 0.25, 0.45)
+
+[sub_resource type="PrismMesh" id="PrismMesh_nose_right"]
+size = Vector3(0.22, 0.25, 0.45)
+
+[sub_resource type="BoxMesh" id="BoxMesh_wing_fwd"]
+size = Vector3(0.55, 0.05, 0.35)
+
+[sub_resource type="BoxMesh" id="BoxMesh_cockpit"]
+size = Vector3(0.25, 0.15, 0.22)
+
+[sub_resource type="BoxMesh" id="BoxMesh_stripe"]
+size = Vector3(0.3, 0.34, 0.12)
 
 [node name="Enemy" type="Area3D"]
 collision_layer = 2
@@ -33,24 +41,55 @@ explosion_scene = ExtResource("2_explosion")
 
 [node name="ShipMesh" type="Node3D" parent="."]
 
-[node name="Body" type="MeshInstance3D" parent="ShipMesh"]
-mesh = SubResource("BoxMesh_enemy_body")
-surface_material_override/0 = SubResource("StandardMaterial3D_enemy_body")
+[node name="HullLeft" type="MeshInstance3D" parent="ShipMesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.35, 0, 0)
+mesh = SubResource("BoxMesh_hull_left")
+surface_material_override/0 = ExtResource("3_red")
+
+[node name="HullRight" type="MeshInstance3D" parent="ShipMesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.35, 0, 0)
+mesh = SubResource("BoxMesh_hull_right")
+surface_material_override/0 = ExtResource("3_red")
+
+[node name="CenterSection" type="MeshInstance3D" parent="ShipMesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.15)
+mesh = SubResource("BoxMesh_center")
+surface_material_override/0 = ExtResource("3_red")
+
+[node name="NoseLeft" type="MeshInstance3D" parent="ShipMesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.35, -0.02, -0.72)
+mesh = SubResource("PrismMesh_nose_left")
+surface_material_override/0 = ExtResource("3_red")
+
+[node name="NoseRight" type="MeshInstance3D" parent="ShipMesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.35, -0.02, -0.72)
+mesh = SubResource("PrismMesh_nose_right")
+surface_material_override/0 = ExtResource("3_red")
+
+[node name="WingLeftFwd" type="MeshInstance3D" parent="ShipMesh"]
+transform = Transform3D(0.966, 0, 0.259, 0, 1, 0, -0.259, 0, 0.966, -0.72, 0, -0.28)
+mesh = SubResource("BoxMesh_wing_fwd")
+surface_material_override/0 = ExtResource("3_red")
+
+[node name="WingRightFwd" type="MeshInstance3D" parent="ShipMesh"]
+transform = Transform3D(0.966, 0, -0.259, 0, 1, 0, 0.259, 0, 0.966, 0.72, 0, -0.28)
+mesh = SubResource("BoxMesh_wing_fwd")
+surface_material_override/0 = ExtResource("3_red")
 
 [node name="Cockpit" type="MeshInstance3D" parent="ShipMesh"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, 0.2)
-mesh = SubResource("BoxMesh_enemy_cockpit")
-surface_material_override/0 = SubResource("StandardMaterial3D_enemy_cockpit")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.12, -0.05)
+mesh = SubResource("BoxMesh_cockpit")
+surface_material_override/0 = ExtResource("5_cockpit")
 
-[node name="WingLeft" type="MeshInstance3D" parent="ShipMesh"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.6, 0, 0)
-mesh = SubResource("BoxMesh_enemy_wing")
-surface_material_override/0 = SubResource("StandardMaterial3D_enemy_body")
+[node name="StripeLeft" type="MeshInstance3D" parent="ShipMesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.35, 0, 0.2)
+mesh = SubResource("BoxMesh_stripe")
+surface_material_override/0 = ExtResource("4_yellow")
 
-[node name="WingRight" type="MeshInstance3D" parent="ShipMesh"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.6, 0, 0)
-mesh = SubResource("BoxMesh_enemy_wing")
-surface_material_override/0 = SubResource("StandardMaterial3D_enemy_body")
+[node name="StripeRight" type="MeshInstance3D" parent="ShipMesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.35, 0, 0.2)
+mesh = SubResource("BoxMesh_stripe")
+surface_material_override/0 = ExtResource("4_yellow")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 shape = SubResource("BoxShape3D_enemy")

@@ -1,34 +1,34 @@
-[gd_scene load_steps=8 format=3 uid="uid://bvqx4kjp8ymqc"]
+[gd_scene load_steps=6 format=3 uid="uid://bvqx4kjp8ymqc"]
 
 [ext_resource type="Script" path="res://scripts/Player.gd" id="1_player"]
 [ext_resource type="PackedScene" uid="uid://c6y2qvhj5g3km" path="res://scenes/Bullet.tscn" id="2_bullet"]
+[ext_resource type="Material" uid="uid://cplayer_hull_94" path="res://materials/mat_player_hull.tres" id="3_hull"]
+[ext_resource type="Material" uid="uid://cmat_cockpit_94" path="res://materials/mat_cockpit.tres" id="4_cockpit"]
+[ext_resource type="Material" uid="uid://cmat_neutral_gry" path="res://materials/mat_neutral_grey.tres" id="5_grey"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_player"]
-size = Vector3(1.2, 0.4, 1.5)
+size = Vector3(1.4, 0.4, 1.8)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_body"]
-albedo_color = Color(0.2, 0.6, 0.3, 1)
-metallic = 0.3
-roughness = 0.7
+[sub_resource type="BoxMesh" id="BoxMesh_fuselage"]
+size = Vector3(0.5, 0.28, 1.4)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_cockpit"]
-albedo_color = Color(0.3, 0.8, 1.0, 1)
-metallic = 0.8
-roughness = 0.2
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wings"]
-albedo_color = Color(0.15, 0.45, 0.25, 1)
-metallic = 0.2
-roughness = 0.8
-
-[sub_resource type="BoxMesh" id="BoxMesh_body"]
-size = Vector3(0.8, 0.3, 1.2)
+[sub_resource type="PrismMesh" id="PrismMesh_nose"]
+size = Vector3(0.4, 0.22, 0.6)
 
 [sub_resource type="BoxMesh" id="BoxMesh_cockpit"]
-size = Vector3(0.4, 0.25, 0.4)
+size = Vector3(0.32, 0.18, 0.35)
 
 [sub_resource type="BoxMesh" id="BoxMesh_wing"]
-size = Vector3(0.6, 0.1, 0.5)
+size = Vector3(0.8, 0.06, 0.45)
+
+[sub_resource type="BoxMesh" id="BoxMesh_wingTip"]
+size = Vector3(0.15, 0.12, 0.25)
+
+[sub_resource type="BoxMesh" id="BoxMesh_tailFin"]
+size = Vector3(0.06, 0.35, 0.3)
+
+[sub_resource type="BoxMesh" id="BoxMesh_engine"]
+size = Vector3(0.18, 0.18, 0.25)
 
 [node name="Player" type="CharacterBody3D"]
 collision_layer = 1
@@ -41,24 +41,54 @@ shape = SubResource("BoxShape3D_player")
 
 [node name="ShipMesh" type="Node3D" parent="."]
 
-[node name="Body" type="MeshInstance3D" parent="ShipMesh"]
-mesh = SubResource("BoxMesh_body")
-surface_material_override/0 = SubResource("StandardMaterial3D_body")
+[node name="Fuselage" type="MeshInstance3D" parent="ShipMesh"]
+mesh = SubResource("BoxMesh_fuselage")
+surface_material_override/0 = ExtResource("3_hull")
+
+[node name="Nose" type="MeshInstance3D" parent="ShipMesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.02, -0.95)
+mesh = SubResource("PrismMesh_nose")
+surface_material_override/0 = ExtResource("3_hull")
 
 [node name="Cockpit" type="MeshInstance3D" parent="ShipMesh"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, -0.2)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.18, -0.25)
 mesh = SubResource("BoxMesh_cockpit")
-surface_material_override/0 = SubResource("StandardMaterial3D_cockpit")
+surface_material_override/0 = ExtResource("4_cockpit")
 
 [node name="WingLeft" type="MeshInstance3D" parent="ShipMesh"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.7, -0.05, 0.1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.62, -0.08, 0.15)
 mesh = SubResource("BoxMesh_wing")
-surface_material_override/0 = SubResource("StandardMaterial3D_wings")
+surface_material_override/0 = ExtResource("3_hull")
 
 [node name="WingRight" type="MeshInstance3D" parent="ShipMesh"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.7, -0.05, 0.1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.62, -0.08, 0.15)
 mesh = SubResource("BoxMesh_wing")
-surface_material_override/0 = SubResource("StandardMaterial3D_wings")
+surface_material_override/0 = ExtResource("3_hull")
+
+[node name="WingTipLeft" type="MeshInstance3D" parent="ShipMesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0, -0.05, 0.1)
+mesh = SubResource("BoxMesh_wingTip")
+surface_material_override/0 = ExtResource("5_grey")
+
+[node name="WingTipRight" type="MeshInstance3D" parent="ShipMesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.0, -0.05, 0.1)
+mesh = SubResource("BoxMesh_wingTip")
+surface_material_override/0 = ExtResource("5_grey")
+
+[node name="TailFin" type="MeshInstance3D" parent="ShipMesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 0.5)
+mesh = SubResource("BoxMesh_tailFin")
+surface_material_override/0 = ExtResource("3_hull")
+
+[node name="EngineLeft" type="MeshInstance3D" parent="ShipMesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.2, -0.05, 0.72)
+mesh = SubResource("BoxMesh_engine")
+surface_material_override/0 = ExtResource("5_grey")
+
+[node name="EngineRight" type="MeshInstance3D" parent="ShipMesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2, -0.05, 0.72)
+mesh = SubResource("BoxMesh_engine")
+surface_material_override/0 = ExtResource("5_grey")
 
 [node name="BulletSpawnPoint" type="Marker3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.5)

@@ -1,0 +1,7 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://cplayer_hull_94"]
+
+[resource]
+resource_name = "mat_player_hull"
+albedo_color = Color(0.25, 0.45, 0.3, 1)
+metallic = 0.0
+roughness = 1.0
