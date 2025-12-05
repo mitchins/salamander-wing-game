@@ -34,15 +34,15 @@ var _combat_damage_taken: int = 0
 var _pre_combat_score: int = 0
 var _pre_combat_shield: int = 0
 
-# Chatter lines for cinematic segments
-var _chatter_lines: Array[String] = [
-	"RAZOR: Alright Rider, stay sharp out there.",
-	"RIDER: Copy that. Sensors picking up movement ahead.",
-	"RAZOR: Don't get cocky. These bogeys are fast.",
-	"RIDER: Contact in 5... 4... 3...",
+# Cinematic comms sequence (speaker_id, text, duration)
+var _cinematic_comms: Array = [
+	["RAZOR", "Alright Rider, stay sharp out there.", 2.5],
+	["RIDER", "Copy that. Sensors picking up movement ahead.", 2.5],
+	["RAZOR", "Don't get cocky. These bogeys are fast.", 2.5],
+	["RIDER", "Contact in 5... 4... 3...", 2.0],
 ]
-var _chatter_index: int = 0
-var _chatter_timer: float = 0.0
+var _comms_index: int = 0
+var _comms_timer: float = 0.0
 
 func _ready() -> void:
 	# Set up connections
@@ -103,21 +103,23 @@ func _enter_cinematic() -> void:
 	print("[STATE] Entering CINEMATIC")
 	player.input_enabled = false
 	enemy_spawner.spawning_enabled = false
-	_chatter_index = 0
-	_chatter_timer = 0.0
+	_comms_index = 0
+	_comms_timer = 0.0
 	hud.hide_crosshair()
-	hud.show_chatter("")
+	hud.show_chatter("")  # Clear old chatter label
+	Comms.clear()  # Clear any pending comms
 
 func _update_cinematic(delta: float) -> void:
-	# Display chatter lines periodically
-	_chatter_timer += delta
-	var chatter_interval = cinematic_duration / (_chatter_lines.size() + 1)
+	# Display comms messages periodically
+	_comms_timer += delta
+	var comms_interval = cinematic_duration / (_cinematic_comms.size() + 1)
 	
-	if _chatter_index < _chatter_lines.size():
-		if _chatter_timer > chatter_interval:
-			_chatter_timer = 0.0
-			hud.show_chatter(_chatter_lines[_chatter_index])
-			_chatter_index += 1
+	if _comms_index < _cinematic_comms.size():
+		if _comms_timer > comms_interval:
+			_comms_timer = 0.0
+			var msg = _cinematic_comms[_comms_index]
+			Comms.say(msg[0], msg[1], msg[2])
+			_comms_index += 1
 	
 	# Transition to QTE after duration
 	if state_time > cinematic_duration:
@@ -133,6 +135,9 @@ func _enter_qte() -> void:
 	
 	# Slow time for dramatic effect
 	Engine.time_scale = 0.7
+	
+	# Comms: Vera announces incoming threat
+	Comms.say_immediate("VERA", "Incoming threat detected. Stand by for tactical options.", 3.0)
 	
 	# Spawn QTE overlay
 	_qte_overlay = QTE_OVERLAY_SCENE.instantiate()
@@ -163,12 +168,12 @@ func _on_qte_choice(choice_id: String) -> void:
 			# Fewer enemies, but take a small scripted hit
 			enemy_spawner.configure_wave("evade")
 			game_controller.player_hit(10)  # Scripted graze damage
-			hud.show_chatter("RIDER: Breaking hard! Took a scrape...")
+			Comms.say_immediate("STONE", "You break formation, you own the fallout, Rider.", 2.5)
 			player.trigger_camera_shake(0.3, 0.15)
 		"hold":
 			# More enemies, higher risk/reward
 			enemy_spawner.configure_wave("hold")
-			hud.show_chatter("RIDER: Holding course. Here they come!")
+			Comms.say_immediate("STONE", "Hold the line. No one turns tail on my watch.", 2.5)
 	
 	enter_state(State.COMBAT)
 
@@ -186,8 +191,8 @@ func _enter_combat() -> void:
 	_pre_combat_score = game_controller.score
 	_pre_combat_shield = game_controller.shield
 	
-	# Clear chatter after a moment
-	await get_tree().create_timer(2.0).timeout
+	# Clear any pending comms after a moment
+	await get_tree().create_timer(2.5).timeout
 	if state == State.COMBAT:
 		hud.show_chatter("")
 
@@ -224,9 +229,13 @@ func _end_combat_window() -> void:
 	await get_tree().create_timer(summary_duration).timeout
 	
 	hud.hide_combat_summary()
-	hud.show_chatter("RAZOR: Good work, Rider. Returning to formation.")
+	Comms.say("SPARKS", "Ship's still in one piece... this time.", 3.0)
 	
 	# Small delay before returning to cinematic
+	await get_tree().create_timer(2.0).timeout
+	
+	Comms.say("RAZOR", "Good work, Rider. Returning to formation.", 2.5)
+	
 	await get_tree().create_timer(1.5).timeout
 	
 	enter_state(State.CINEMATIC)

@@ -99,7 +99,7 @@ The demo cycles through a complete vignette loop:
 
 ```
 salamander-wing-game/
-├── project.godot          # Godot project file with input mappings
+├── project.godot          # Godot project file with input mappings + autoloads
 ├── icon.svg               # Project icon
 ├── README.md              # This file
 │
@@ -111,6 +111,15 @@ salamander-wing-game/
 │   ├── mat_neutral_grey.tres
 │   ├── mat_bullet.tres
 │   └── mat_explosion.tres
+│
+├── portraits/             # Character portrait images (64x64)
+│   ├── rider.png
+│   ├── razor.png
+│   ├── sparks.png
+│   ├── vera.png
+│   └── stone.png
+│
+├── vo/                    # Voice-over clips (optional, .ogg format)
 │
 ├── scenes/
 │   ├── Main.tscn          # Main game scene (run this)
@@ -127,6 +136,8 @@ salamander-wing-game/
 │   ├── Explosion.gd       # Explosion lifecycle
 │   ├── EnemySpawner.gd    # Enemy wave spawning
 │   ├── GameController.gd  # Score, shield, game state
+│   ├── CommsManager.gd    # Autoload: Comms.say() API + character registry
+│   ├── CommsPanel.gd      # Talking head panel controller
 │   ├── QTEOverlay.gd      # QTE decision UI
 │   ├── HUD.gd             # HUD display logic
 │   └── Starfield.gd       # Infinite spherical starfield
@@ -136,6 +147,7 @@ salamander-wing-game/
 │
 └── ui/
     ├── HUD.tscn           # In-game HUD (neon green stats, amber chatter)
+    ├── CommsPanel.tscn    # Wing Commander-style talking head panel
     └── QTEOverlay.tscn    # QTE decision overlay
 ```
 
@@ -257,6 +269,7 @@ In `scripts/Enemy.gd`:
 ## Technical Notes
 
 - The HUD is on a separate `CanvasLayer` (layer 10) so it's NOT affected by the CRT shader, keeping text crisp
+- The Comms panel is on layer 11, above the HUD
 - Physics layers:
   - Layer 1: Player
   - Layer 2: Enemies
@@ -265,6 +278,56 @@ In `scripts/Enemy.gd`:
 - Starfield uses a spherical distribution that follows the camera, providing infinite parallax without zooming
 - Materials use `metallic = 0.0` and `roughness = 1.0` for flat 1994-era shading
 - No shadows, no HDR, no bloom - deliberately basic rendering
+
+## Comms System (Wing Commander-style Talking Heads)
+
+The project includes a global `Comms` autoload for displaying character dialogue with portraits.
+
+### Usage
+```gdscript
+# Basic usage - show a message for 3.5 seconds (default)
+Comms.say("RAZOR", "Alright Rider, stay sharp out there.")
+
+# With custom duration
+Comms.say("VERA", "Incoming threat detected.", 4.0)
+
+# With voice-over clip (future-proof, place .ogg files in res://vo/)
+Comms.say("STONE", "Hold the line!", 3.0, "stone_hold_line")
+
+# Immediately show (interrupts current message, clears queue)
+Comms.say_immediate("RIDER", "Taking fire!")
+
+# Clear all messages
+Comms.clear()
+```
+
+### Character Registry
+Characters are defined in `scripts/CommsManager.gd`:
+| ID | Display Name | Color | Role |
+|----|--------------|-------|------|
+| `RIDER` | Rider | Green | Player character |
+| `RAZOR` | Razor | Amber | Wingman |
+| `SPARKS` | Sparks | Cyan | Tech/mechanic |
+| `VERA` | Lt. Kane | Orange | Ops officer |
+| `STONE` | Col. Stone | Pink | Commander |
+
+### Adding New Characters
+Edit the `CHARACTERS` dictionary in `CommsManager.gd`:
+```gdscript
+"NEW_CHAR": {
+    "display_name": "Name",
+    "portrait_path": "res://portraits/new_char.png",
+    "color": Color(0.8, 0.8, 0.8)
+}
+```
+
+### Portraits
+- Place 64×64 PNG portraits in `res://portraits/`
+- If a portrait file doesn't exist, a colored placeholder is generated automatically
+
+### Voice-Over (Future)
+- Place `.ogg` files in `res://vo/`
+- Pass the filename (without extension) as the fourth argument to `say()`
 
 ## Visual Philosophy
 
