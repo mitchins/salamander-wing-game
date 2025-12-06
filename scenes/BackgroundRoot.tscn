@@ -40,7 +40,7 @@ texture_filter = 0
 script = ExtResource("1_bgroot")
 
 [node name="GasGiant" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -120, -30, -350)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -200, -60, -1000)
 mesh = SubResource("SphereMesh_giant")
 surface_material_override/0 = SubResource("Material_giant")
 
@@ -50,6 +50,6 @@ mesh = SubResource("SphereMesh_moon")
 surface_material_override/0 = SubResource("Material_moon")
 
 [node name="Ring" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 0.2, 0.98, 0, -0.98, 0.2, -120, -30, -350)
+transform = Transform3D(1, 0, 0, 0, 0.2, 0.98, 0, -0.98, 0.2, -200, -60, -1000)
 mesh = SubResource("TorusMesh_ring")
 surface_material_override/0 = SubResource("Material_ring")

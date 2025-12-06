@@ -51,6 +51,7 @@ var _comms_index: int = 0
 var _comms_timer: float = 0.0
 
 func _ready() -> void:
+
 	# Set up connections
 	game_controller.setup_hud(hud)
 	
