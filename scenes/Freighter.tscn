@@ -1,0 +1,46 @@
+[gd_scene load_steps=7 format=3 uid="uid://freighter_convoy"]
+
+[ext_resource type="Script" path="res://scripts/Freighter.gd" id="1_freighter"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_hull"]
+size = Vector3(3, 2, 8)
+
+[sub_resource type="StandardMaterial3D" id="Material_freighter"]
+albedo_color = Color(0.4, 0.45, 0.5, 1)
+metallic = 0.3
+roughness = 0.7
+texture_filter = 0
+
+[sub_resource type="BoxMesh" id="BoxMesh_bridge"]
+size = Vector3(2, 1.5, 2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_engine"]
+size = Vector3(1.5, 1.5, 2)
+
+[sub_resource type="StandardMaterial3D" id="Material_engine"]
+albedo_color = Color(0.3, 0.35, 0.4, 1)
+metallic = 0.4
+roughness = 0.6
+texture_filter = 0
+
+[node name="Freighter" type="Node3D"]
+script = ExtResource("1_freighter")
+
+[node name="Mesh" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_hull")
+surface_material_override/0 = SubResource("Material_freighter")
+
+[node name="Bridge" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 2)
+mesh = SubResource("BoxMesh_bridge")
+surface_material_override/0 = SubResource("Material_freighter")
+
+[node name="EngineLeft" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0, -4.5)
+mesh = SubResource("BoxMesh_engine")
+surface_material_override/0 = SubResource("Material_engine")
+
+[node name="EngineRight" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 0, -4.5)
+mesh = SubResource("BoxMesh_engine")
+surface_material_override/0 = SubResource("Material_engine")

@@ -1,0 +1,67 @@
+{
+	"mission_name": "Convoy Omega",
+	"mission_description": "Escort freighter convoy through hostile space",
+	"phases": [
+		{
+			"name": "intro",
+			"duration": 8.0,
+			"on_enter": [
+				{"type": "music", "track": "convoy_ambient", "action": "play"},
+				{"type": "objective", "text": "PROTECT THE CONVOY"}
+			],
+			"beats": [
+				{"time": 1.0, "type": "vo", "speaker": "COMMAND", "line": "Razor Lead, this is Command. Convoy Omega is entering hostile space."},
+				{"time": 4.0, "type": "vo", "speaker": "WINGMAN", "line": "Copy Command. Razor Two, covering the rear."},
+				{"time": 6.5, "type": "vo", "speaker": "FREIGHTER", "line": "Freighter Alpha here. We're counting on you, Razor."}
+			],
+			"exit_to": "first_contact"
+		},
+		{
+			"name": "first_contact",
+			"duration": 45.0,
+			"on_enter": [
+				{"type": "music", "track": "combat_light", "action": "crossfade"},
+				{"type": "spawn_wave", "wave_id": "scouts_01", "count": 3, "pattern": "frontal"},
+				{"type": "vo", "speaker": "WINGMAN", "line": "Contacts! Enemy fighters inbound!"}
+			],
+			"beats": [
+				{"time": 10.0, "type": "spawn_wave", "wave_id": "scouts_02", "count": 2, "pattern": "flanking_left"},
+				{"time": 20.0, "type": "spawn_wave", "wave_id": "scouts_03", "count": 2, "pattern": "flanking_right"},
+				{"time": 25.0, "type": "vo", "speaker": "FREIGHTER", "line": "They're targeting our engines!"},
+				{"time": 35.0, "type": "spawn_wave", "wave_id": "interceptors_01", "count": 4, "pattern": "pincer"}
+			],
+			"exit_to": "boss_wave"
+		},
+		{
+			"name": "boss_wave",
+			"duration": 60.0,
+			"on_enter": [
+				{"type": "music", "track": "combat_intense", "action": "crossfade"},
+				{"type": "objective", "text": "DESTROY ACE SQUADRON"},
+				{"type": "vo", "speaker": "COMMAND", "line": "Warning! Enemy ace squadron detected!"},
+				{"type": "spawn_wave", "wave_id": "aces_01", "count": 2, "pattern": "ace_duo"}
+			],
+			"beats": [
+				{"time": 5.0, "type": "vo", "speaker": "ACE", "line": "Fresh meat for Crimson Squadron..."},
+				{"time": 15.0, "type": "qte", "qte_type": "dodge", "difficulty": "hard"},
+				{"time": 30.0, "type": "spawn_wave", "wave_id": "reinforcements", "count": 3, "pattern": "rear"},
+				{"time": 45.0, "type": "vo", "speaker": "WINGMAN", "line": "These guys are good! Stay sharp!"}
+			],
+			"exit_to": "cleanup"
+		},
+		{
+			"name": "cleanup",
+			"duration": 15.0,
+			"on_enter": [
+				{"type": "music", "track": "convoy_ambient", "action": "crossfade"},
+				{"type": "objective", "text": "SECURE THE AREA"},
+				{"type": "vo", "speaker": "WINGMAN", "line": "Hostiles neutralized. Area looks clear."}
+			],
+			"beats": [
+				{"time": 5.0, "type": "vo", "speaker": "FREIGHTER", "line": "Convoy Omega is secure. Thank you, Razor Squadron!"},
+				{"time": 10.0, "type": "vo", "speaker": "COMMAND", "line": "Excellent work, Razor Lead. Return to carrier."}
+			],
+			"exit_to": "mission_complete"
+		}
+	]
+}

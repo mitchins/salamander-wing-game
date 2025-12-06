@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3 uid="uid://dkn4x8wm7q3hp"]
+[gd_scene load_steps=14 format=3 uid="uid://dkn4x8wm7q3hp"]
 
 [ext_resource type="Script" path="res://scripts/Main.gd" id="1_main"]
 [ext_resource type="Script" path="res://scripts/GameController.gd" id="2_gamecontroller"]
@@ -10,6 +10,8 @@
 [ext_resource type="Script" path="res://scripts/Starfield.gd" id="8_starfield"]
 [ext_resource type="PackedScene" uid="uid://bwingman_razor" path="res://scenes/Wingman.tscn" id="9_wingman"]
 [ext_resource type="Script" path="res://scripts/ViewportScaler.gd" id="10_scaler"]
+[ext_resource type="Script" path="res://scripts/MissionDirector.gd" id="11_director"]
+[ext_resource type="PackedScene" uid="uid://background_root" path="res://scenes/BackgroundRoot.tscn" id="12_background"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_crt"]
 shader = ExtResource("3_crt")
@@ -50,6 +52,10 @@ script = ExtResource("1_main")
 [node name="GameController" type="Node" parent="."]
 script = ExtResource("2_gamecontroller")
 
+[node name="MissionDirector" type="Node" parent="."]
+script = ExtResource("11_director")
+mission_file = "res://missions/mission_convoy.json"
+
 [node name="SubViewportContainer" type="SubViewportContainer" parent="."]
 anchors_preset = 0
 anchor_right = 0.0
@@ -79,6 +85,8 @@ transform = Transform3D(-0.866025, 0.353553, -0.353553, 0, 0.707107, 0.707107, 0
 light_color = Color(0.0627451, 0.0941176, 0.133333, 1)
 light_energy = 0.12
 shadow_enabled = false
+
+[node name="BackgroundRoot" parent="SubViewportContainer/GameViewport" instance=ExtResource("12_background")]
 
 [node name="Player" parent="SubViewportContainer/GameViewport" instance=ExtResource("4_player")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
