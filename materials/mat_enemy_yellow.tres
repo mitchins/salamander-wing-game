@@ -1,7 +1,11 @@
 [gd_resource type="StandardMaterial3D" format=3 uid="uid://cmat_enemy_yel94"]
 
+[ext_resource type="CompressedTexture2D" uid="uid://sxatya0x0bip" path="res://materials/textures/tex_hull_grey.png" id="1_grey"]
+
 [resource]
 resource_name = "mat_enemy_yellow"
+albedo_texture = ExtResource("1_grey")
 albedo_color = Color(0.7, 0.6, 0.15, 1)
 metallic = 0.0
 roughness = 1.0
+texture_filter = 0

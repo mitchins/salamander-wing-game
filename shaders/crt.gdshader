@@ -19,9 +19,16 @@ uniform float dither_strength : hint_range(0.0, 1.0) = 0.02;
 uniform float noise_intensity : hint_range(0.0, 0.15) = 0.02;
 
 // Color adjustments
-uniform float brightness : hint_range(0.8, 1.2) = 1.0;
+uniform float brightness : hint_range(0.5, 2.0) = 1.0; // keep neutral; prefer curve/gamma
+uniform float gamma : hint_range(0.5, 2.0) = 0.9;     // < 1.0 lifts mids
 uniform float saturation : hint_range(0.5, 1.5) = 1.05;
 uniform float contrast : hint_range(0.8, 1.3) = 1.05;
+uniform vec2 internal_resolution = vec2(400.0, 300.0);
+
+// Midtone lift that preserves blacks
+uniform float mid_boost : hint_range(1.0, 1.5) = 1.15;  // 1.0 = no extra lift
+uniform float lift_shadows_start : hint_range(0.0, 0.3) = 0.02;
+uniform float lift_shadows_end   : hint_range(0.05, 0.6) = 0.25;
 
 float hash(vec2 p) {
 	return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
@@ -53,47 +60,56 @@ vec3 posterize(vec3 color, float levels, float dither) {
 }
 
 void fragment() {
-	vec2 uv = barrel_distort(UV);
+    vec2 uv = barrel_distort(UV);
 	
 	// Black outside distorted area
 	bool out_of_bounds = uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0;
 	
 	vec4 final_color = vec4(0.0, 0.0, 0.0, 1.0);
 	
-	if (!out_of_bounds) {
-		vec4 color = texture(TEXTURE, uv);
-		
-		// Contrast
-		color.rgb = ((color.rgb - 0.5) * contrast) + 0.5;
-		
-		// Scanlines
-		float scanline = sin(uv.y * scanline_count * 3.14159) * 0.5 + 0.5;
-		scanline = pow(scanline, 1.5);
-		scanline = mix(1.0, scanline, scanline_intensity);
-		color.rgb *= scanline;
-		
-		// Posterization with dithering
-		vec2 pixel_pos = uv * vec2(480.0, 320.0);
-		float dither_value = dither4x4(pixel_pos);
-		color.rgb = posterize(color.rgb, color_depth, dither_value);
-		
-		// Noise/grain
-		float noise = hash(uv * 800.0 + TIME * 5.0);
-		noise = (noise - 0.5) * noise_intensity;
-		color.rgb += noise;
-		
-		// Vignette
-		vec2 vignette_uv = uv - 0.5;
-		float vignette = 1.0 - dot(vignette_uv, vignette_uv) * vignette_intensity * 2.0;
-		vignette = clamp(vignette, 0.0, 1.0);
-		color.rgb *= vignette;
-		
-		// Brightness
-		color.rgb *= brightness;
-		
-		// Saturation
-		float gray = dot(color.rgb, vec3(0.299, 0.587, 0.114));
-		color.rgb = mix(vec3(gray), color.rgb, saturation);
+    if (!out_of_bounds) {
+        vec4 color = texture(TEXTURE, uv);
+        
+        // Contrast
+        color.rgb = ((color.rgb - 0.5) * contrast) + 0.5;
+        
+        // Posterization with dithering
+        vec2 pixel_pos = uv * internal_resolution;
+        float dither_value = dither4x4(pixel_pos);
+        color.rgb = posterize(color.rgb, color_depth, dither_value);
+        
+        // Gamma correction first (lifts mids more than blacks for gamma < 1)
+        color.rgb = pow(color.rgb, vec3(gamma));
+
+        // Luminance-dependent midtone boost that preserves deep blacks
+        float l = max(max(color.r, color.g), color.b);
+        float boost_amount = smoothstep(lift_shadows_start, lift_shadows_end, l);
+        vec3 boosted = color.rgb * mid_boost;
+        color.rgb = mix(color.rgb, boosted, boost_amount);
+
+        // Optional global brightness (kept at 1.0 by default)
+        color.rgb *= brightness;
+
+        // Scanlines
+        float scanline = sin(uv.y * scanline_count * 3.14159) * 0.5 + 0.5;
+        scanline = pow(scanline, 1.5);
+        scanline = mix(1.0, scanline, scanline_intensity);
+        color.rgb *= scanline;
+
+        // Noise/grain
+        float noise = hash(uv * 800.0 + TIME * 5.0);
+        noise = (noise - 0.5) * noise_intensity;
+        color.rgb += noise;
+        
+        // Vignette
+        vec2 vignette_uv = uv - 0.5;
+        float vignette = 1.0 - dot(vignette_uv, vignette_uv) * vignette_intensity * 2.0;
+        vignette = clamp(vignette, 0.0, 1.0);
+        color.rgb *= vignette;
+        
+        // Saturation
+        float gray = dot(color.rgb, vec3(0.299, 0.587, 0.114));
+        color.rgb = mix(vec3(gray), color.rgb, saturation);
 		
 		color.rgb = clamp(color.rgb, 0.0, 1.0);
 		final_color = color;

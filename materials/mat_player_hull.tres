@@ -1,7 +1,11 @@
 [gd_resource type="StandardMaterial3D" format=3 uid="uid://cplayer_hull_94"]
 
+[ext_resource type="CompressedTexture2D" uid="uid://bxgmveculqxhc" path="res://materials/textures/tex_hull_green.png" id="1_green"]
+
 [resource]
 resource_name = "mat_player_hull"
+albedo_texture = ExtResource("1_green")
 albedo_color = Color(0.25, 0.45, 0.3, 1)
 metallic = 0.0
 roughness = 1.0
+texture_filter = 0
