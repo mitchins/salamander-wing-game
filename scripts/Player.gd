@@ -2,28 +2,39 @@ extends CharacterBody3D
 class_name Player
 
 ## Player ship for rail shooter
-## Moves in a bounded area while constantly moving forward
+## 4-DOF steering: yaw/pitch control with visual banking
+## Forward movement on rail, no lateral strafe
 
-# Movement settings - tweak these for feel
-@export var move_speed: float = 8.0
+# Steering settings - 4-DOF control
+@export var yaw_speed: float = 2.0  # Radians per second at full input
+@export var pitch_speed: float = 1.5
+@export var max_yaw: float = 0.785  # ~45 degrees
+@export var max_pitch: float = 0.524  # ~30 degrees
+@export var return_speed: float = 2.5  # How fast yaw/pitch return to center
+@export var bank_factor: float = 0.4  # Visual roll from yaw
+
+# Forward movement (rail)
 @export var forward_speed: float = 20.0
 
-# Movement bounds (player is clamped to this area)
-@export var bounds_x: float = 5.0
-@export var bounds_y: float = 3.0
+# Small screen-space offset derived from steering (parallax feel)
+@export var parallax_factor: float = 2.0
 
 # Firing settings
-@export var fire_rate: float = 0.15  # Seconds between shots
+@export var fire_rate: float = 0.15
 @export var bullet_scene: PackedScene
 
 # Input control - set by Main.gd based on game state
 var input_enabled: bool = true
 
+# Steering state
+var _yaw: float = 0.0
+var _pitch: float = 0.0
+
 # Camera shake
 var _shake_intensity: float = 0.0
 var _shake_duration: float = 0.0
 var _shake_timer: float = 0.0
-var _original_camera_transform: Transform3D
+var _original_camera_offset: Vector3 = Vector3.ZERO
 
 # Internal state
 var _fire_cooldown: float = 0.0
@@ -34,43 +45,35 @@ var _game_controller: Node = null
 @onready var camera: Camera3D = $Camera3D
 
 func _ready() -> void:
-	# Find game controller in parent hierarchy
+	add_to_group("player")
 	_game_controller = get_tree().get_first_node_in_group("game_controller")
-	
-	# Store original camera transform for shake
 	if camera:
-		_original_camera_transform = camera.transform
+		_original_camera_offset = camera.position
 
 func _physics_process(delta: float) -> void:
 	if _game_controller and _game_controller.game_over:
 		return
 	
-	# Get input only if enabled (COMBAT state)
+	# Get steering input
 	var input_dir := Vector2.ZERO
 	if input_enabled:
 		input_dir.x = Input.get_axis("move_left", "move_right")
 		input_dir.y = Input.get_axis("move_down", "move_up")
 	
-	# Calculate velocity - always move forward, lateral only with input
-	velocity.x = input_dir.x * move_speed
-	velocity.y = input_dir.y * move_speed
-	velocity.z = forward_speed
+	# Update yaw and pitch based on input
+	_update_steering(input_dir, delta)
 	
-	# Move
+	# Apply rotation to ship
+	_apply_rotation(delta)
+	
+	# Forward movement only (rail) - always move along negative Z
+	velocity = Vector3(0, 0, -forward_speed)  # Move along -Z (into screen)
 	move_and_slide()
 	
-	# Clamp position to bounds
-	position.x = clamp(position.x, -bounds_x, bounds_x)
-	position.y = clamp(position.y, -bounds_y, bounds_y)
+	# Small parallax offset based on steering
+	_apply_parallax_offset()
 	
-	# Slight ship tilt based on movement for visual feedback
-	if ship_mesh:
-		var target_rotation := Vector3.ZERO
-		target_rotation.z = -input_dir.x * 0.4  # Roll when moving left/right
-		target_rotation.x = -input_dir.y * 0.2  # Pitch when moving up/down
-		ship_mesh.rotation = ship_mesh.rotation.lerp(target_rotation, 10.0 * delta)
-	
-	# Handle firing only if input enabled
+	# Handle firing
 	_fire_cooldown -= delta
 	if input_enabled and Input.is_action_pressed("fire") and _fire_cooldown <= 0.0:
 		_fire()
@@ -78,6 +81,43 @@ func _physics_process(delta: float) -> void:
 	
 	# Update camera shake
 	_update_camera_shake(delta)
+
+func _update_steering(input_dir: Vector2, delta: float) -> void:
+	# Apply input to yaw/pitch
+	if abs(input_dir.x) > 0.1:
+		_yaw += input_dir.x * yaw_speed * delta
+		_yaw = clamp(_yaw, -max_yaw, max_yaw)
+	else:
+		# Return to center when no input
+		_yaw = lerp(_yaw, 0.0, return_speed * delta)
+	
+	if abs(input_dir.y) > 0.1:
+		_pitch += input_dir.y * pitch_speed * delta
+		_pitch = clamp(_pitch, -max_pitch, max_pitch)
+	else:
+		_pitch = lerp(_pitch, 0.0, return_speed * delta)
+
+func _apply_rotation(delta: float) -> void:
+	# Apply yaw (turn left/right) and pitch (nose up/down)
+	rotation.y = _yaw
+	rotation.x = -_pitch  # Negative because up input = nose up = negative X rotation
+	
+	# Visual banking based on yaw
+	var target_bank = -_yaw * bank_factor
+	if ship_mesh:
+		# Ship mesh gets additional visual tilt
+		ship_mesh.rotation.z = lerp(ship_mesh.rotation.z, target_bank, 8.0 * delta)
+		# Slight extra pitch tilt for responsiveness
+		ship_mesh.rotation.x = lerp(ship_mesh.rotation.x, _pitch * 0.3, 8.0 * delta)
+
+func _apply_parallax_offset() -> void:
+	# Small screen-space position offset for parallax feel
+	# Derived from rotation, not separate strafe
+	if ship_mesh:
+		var offset_x = sin(_yaw) * parallax_factor
+		var offset_y = sin(_pitch) * parallax_factor * 0.7
+		ship_mesh.position.x = offset_x
+		ship_mesh.position.y = offset_y
 
 func _fire() -> void:
 	if bullet_scene == null:
@@ -87,6 +127,10 @@ func _fire() -> void:
 	var bullet = bullet_scene.instantiate()
 	get_tree().current_scene.add_child(bullet)
 	bullet.global_position = bullet_spawn_point.global_position
+	
+	# Fire along ship's current forward direction
+	var forward_dir = -global_transform.basis.z
+	bullet.set_direction(forward_dir)
 	bullet.set_forward_speed(forward_speed)
 	
 	# Play laser SFX
@@ -97,17 +141,14 @@ func take_damage(amount: int = 10) -> void:
 	if _game_controller:
 		_game_controller.player_hit(amount)
 	
-	# Visual feedback - flash the ship and shake camera
 	if ship_mesh:
 		_flash_damage()
 	
 	trigger_camera_shake(0.4, 0.2)
 	
-	# Play shield hit SFX
 	if has_node("/root/Audio"):
 		get_node("/root/Audio").play_sfx("shield_hit")
 
-## Camera shake for damage/impact feedback
 func trigger_camera_shake(intensity: float, duration: float) -> void:
 	_shake_intensity = intensity
 	_shake_duration = duration
@@ -117,33 +158,50 @@ func _update_camera_shake(delta: float) -> void:
 	if not camera:
 		return
 	
+	# Base camera position follows ship with slight offset based on steering
+	var base_offset = _original_camera_offset
+	base_offset.x += _yaw * 0.5  # Slight camera lag behind yaw
+	base_offset.y += _pitch * 0.3
+	
+	# Mild camera roll for bank feel (max ~10 degrees)
+	var camera_roll = -_yaw * 0.15
+	camera.rotation.z = lerp(camera.rotation.z, camera_roll, 5.0 * delta)
+	
 	if _shake_timer < _shake_duration:
 		_shake_timer += delta
 		var shake_progress = _shake_timer / _shake_duration
 		var current_intensity = _shake_intensity * (1.0 - shake_progress)
 		
-		# Apply random offset
 		var offset = Vector3(
 			randf_range(-current_intensity, current_intensity),
 			randf_range(-current_intensity, current_intensity),
 			0
 		)
-		camera.transform = _original_camera_transform
-		camera.position += offset
+		camera.position = base_offset + offset
 	else:
-		# Reset to original
-		camera.transform = _original_camera_transform
+		camera.position = base_offset
 
 func _flash_damage() -> void:
-	# Quick red flash on damage
 	var tween = create_tween()
 	for child in ship_mesh.get_children():
 		if child is MeshInstance3D:
 			var mat = child.get_surface_override_material(0)
-			if mat == null:
+			if mat == null and child.mesh:
 				mat = child.mesh.surface_get_material(0)
 			if mat and mat is StandardMaterial3D:
 				var original_emission = mat.emission
 				mat.emission_enabled = true
 				mat.emission = Color.RED
 				tween.tween_callback(func(): mat.emission = original_emission).set_delay(0.1)
+
+## Get current forward direction for other systems
+func get_forward_direction() -> Vector3:
+	return -global_transform.basis.z
+
+## Get current yaw for systems that need it
+func get_current_yaw() -> float:
+	return _yaw
+
+## Get current pitch for systems that need it  
+func get_current_pitch() -> float:
+	return _pitch

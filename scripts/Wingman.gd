@@ -53,11 +53,22 @@ func _physics_process(delta: float) -> void:
 func _update_follow(delta: float) -> void:
 	if not _player:
 		return
-	var target_pos = _player.global_position + follow_offset
+	
+	# Calculate offset that accounts for player's steering
+	var offset = follow_offset
+	if _player.has_method("get_current_yaw"):
+		# Bank with player's yaw
+		var player_yaw = _player.get_current_yaw()
+		offset.x = follow_offset.x + sin(player_yaw) * 1.5
+		rotation.y = lerp_angle(rotation.y, player_yaw * 0.5, 3.0 * delta)
+	
+	var target_pos = _player.global_position + offset
 	global_position = global_position.lerp(target_pos, follow_speed * delta)
 	position.z = _player.position.z + follow_offset.z
+	
+	# Visual banking
 	var offset_diff = target_pos.x - global_position.x
-	rotation.z = clamp(offset_diff * 0.1, -0.3, 0.3)
+	rotation.z = lerp(rotation.z, clamp(offset_diff * 0.15, -0.4, 0.4), 4.0 * delta)
 
 func _update_targeting() -> void:
 	_current_target = null

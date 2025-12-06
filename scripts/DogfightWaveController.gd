@@ -11,8 +11,8 @@ signal all_waves_cleared
 @export var enemy_scene: PackedScene
 @export var total_waves: int = 3
 @export var enemies_per_wave: int = 4
-@export var spawn_distance: float = 80.0
-@export var spawn_spread: float = 12.0
+@export var spawn_distance: float = 55.0  # Closer spawn for faster engagement
+@export var spawn_spread: float = 10.0
 
 var current_wave: int = 0
 var enemies_alive: int = 0

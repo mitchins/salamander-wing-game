@@ -4,9 +4,9 @@ class_name EnemyBullet
 ## Enemy projectile - damages player and wingman when hit
 ## Slower than player bullets for dodge opportunity
 
-@export var speed: float = 35.0
+@export var speed: float = 28.0  # Slower to allow dodging
 @export var damage: int = 8
-@export var lifetime: float = 4.0
+@export var lifetime: float = 3.5
 
 var _direction: Vector3 = Vector3.FORWARD
 var _life_timer: float = 0.0
