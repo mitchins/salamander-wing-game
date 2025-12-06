@@ -2,41 +2,39 @@ extends Area3D
 class_name Wingman
 
 ## Wingman AI - Razor
-## Follows the player at an offset and shoots at enemies
+## Follows the player at an offset and actively engages enemies
 ## Can be killed by enemies if they collide
 
 signal wingman_killed
+signal wingman_kill(enemy: Enemy)
 
-@export var follow_offset: Vector3 = Vector3(-3.0, -0.5, 2.0)  # Left and slightly behind
+@export var follow_offset: Vector3 = Vector3(-3.0, -0.5, 2.0)
 @export var follow_speed: float = 5.0
-@export var fire_rate: float = 0.8
+@export var fire_rate: float = 1.8
 @export var bullet_scene: PackedScene
 @export var explosion_scene: PackedScene
 @export var hit_points: int = 3
-@export var targeting_range: float = 60.0  # Max range to target enemies
+@export var targeting_range: float = 60.0
+@export var targeting_cone: float = 0.8
 
 var is_alive: bool = true
-var combat_enabled: bool = false  # Only shoot during combat
+var combat_enabled: bool = false
 
 var _player: Node3D = null
 var _fire_cooldown: float = 0.0
-var _current_target: Node3D = null
+var _current_target: Enemy = null
 var _game_controller: Node = null
 var _bullet_spawn_point: Marker3D = null
+var _wave_controller: Node = null
+var _kills_this_combat: int = 0
 
 func _ready() -> void:
 	add_to_group("wingman")
-	
-	# Connect collision
 	body_entered.connect(_on_body_entered)
 	area_entered.connect(_on_area_entered)
-	
-	# Find references
 	await get_tree().process_frame
 	_player = get_tree().get_first_node_in_group("player")
 	_game_controller = get_tree().get_first_node_in_group("game_controller")
-	
-	# Create bullet spawn point
 	_bullet_spawn_point = Marker3D.new()
 	_bullet_spawn_point.position = Vector3(0, 0, -1.5)
 	add_child(_bullet_spawn_point)
@@ -44,14 +42,9 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if not is_alive:
 		return
-	
 	if _game_controller and _game_controller.game_over:
 		return
-	
-	# Follow player with offset
 	_update_follow(delta)
-	
-	# Handle targeting and firing
 	if combat_enabled:
 		_fire_cooldown -= delta
 		_update_targeting()
@@ -60,107 +53,99 @@ func _physics_process(delta: float) -> void:
 func _update_follow(delta: float) -> void:
 	if not _player:
 		return
-	
-	# Calculate target position relative to player
 	var target_pos = _player.global_position + follow_offset
-	
-	# Smooth follow
 	global_position = global_position.lerp(target_pos, follow_speed * delta)
-	
-	# Match player's forward movement
 	position.z = _player.position.z + follow_offset.z
-	
-	# Slight banking based on horizontal offset from ideal position
 	var offset_diff = target_pos.x - global_position.x
 	rotation.z = clamp(offset_diff * 0.1, -0.3, 0.3)
 
 func _update_targeting() -> void:
-	# Find closest enemy in range
 	_current_target = null
 	var closest_dist = targeting_range
-	
+	var forward = -global_transform.basis.z
 	var enemies = get_tree().get_nodes_in_group("enemy")
 	for enemy in enemies:
-		if not is_instance_valid(enemy):
+		if not is_instance_valid(enemy) or not enemy is Enemy:
 			continue
-		
-		var dist = global_position.distance_to(enemy.global_position)
-		# Only target enemies ahead of us
-		if enemy.global_position.z < global_position.z and dist < closest_dist:
+		var to_enemy = enemy.global_position - global_position
+		var dist = to_enemy.length()
+		if dist > targeting_range:
+			continue
+		var dir_to_enemy = to_enemy.normalized()
+		var dot = forward.dot(dir_to_enemy)
+		if dot > targeting_cone and dist < closest_dist:
 			closest_dist = dist
 			_current_target = enemy
-	
-	# Look at target (slight)
 	if _current_target and is_instance_valid(_current_target):
 		var look_dir = (_current_target.global_position - global_position).normalized()
-		# Only slightly rotate toward target
-		rotation.y = lerp_angle(rotation.y, atan2(look_dir.x, -look_dir.z), 0.1)
+		var target_y = atan2(look_dir.x, -look_dir.z)
+		rotation.y = lerp_angle(rotation.y, target_y, 0.15)
 
 func _try_fire() -> void:
 	if _fire_cooldown > 0:
 		return
-	
 	if not _current_target or not is_instance_valid(_current_target):
 		return
-	
 	if bullet_scene == null:
 		return
-	
-	# Fire at target
+	var to_target = _current_target.global_position - global_position
+	var forward = -global_transform.basis.z
+	var dot = forward.dot(to_target.normalized())
+	if dot < targeting_cone * 0.9:
+		return
 	var bullet = bullet_scene.instantiate()
 	get_tree().current_scene.add_child(bullet)
 	bullet.global_position = _bullet_spawn_point.global_position
-	
-	# Set bullet direction toward target (with some lead)
 	if bullet.has_method("set_forward_speed") and _player:
 		bullet.set_forward_speed(_player.forward_speed)
-	
-	_fire_cooldown = fire_rate
-	
-	# Play laser SFX (quieter than player)
+	_fire_cooldown = fire_rate + randf_range(-0.3, 0.3)
 	if has_node("/root/Audio"):
-		get_node("/root/Audio").play_sfx_varied("player_laser", 0.9, 1.0)
-	# (enemies are typically 1 HP so this fires on kill)
+		get_node("/root/Audio").play_sfx_varied("player_laser", 0.85, 0.95)
+	var target_ref = _current_target
+	get_tree().create_timer(0.15).timeout.connect(func():
+		if is_instance_valid(target_ref) and target_ref is Enemy:
+			if randf() < 0.6:
+				target_ref.take_damage(1)
+				if not is_instance_valid(target_ref) or target_ref.state == Enemy.State.DEAD:
+					_on_razor_kill()
+	)
+
+func _on_razor_kill() -> void:
+	_kills_this_combat += 1
+	wingman_kill.emit(_current_target)
+	if _wave_controller and _wave_controller.has_method("on_razor_kill"):
+		_wave_controller.on_razor_kill()
+	if _kills_this_combat == 3:
+		if has_node("/root/Comms"):
+			get_node("/root/Comms").say("RAZOR", "Try to keep up, Rider.", 2.0)
 
 func take_damage(amount: int = 1) -> void:
 	if not is_alive:
 		return
-	
 	hit_points -= amount
-	
 	if hit_points <= 0:
 		_die()
 	else:
-		# Flash damage effect
 		_flash_damage()
-		Comms.say("RAZOR", "Taking hits! Cover me, Rider!", 2.0)
+		if has_node("/root/Comms"):
+			get_node("/root/Comms").say("RAZOR", "Taking hits! Cover me, Rider!", 2.0)
 
 func _die() -> void:
 	if not is_alive:
 		return
-	
 	is_alive = false
-	
-	# Spawn explosion
 	if explosion_scene:
 		var explosion = explosion_scene.instantiate()
 		get_tree().current_scene.add_child(explosion)
 		explosion.global_position = global_position
-		# Scale up explosion for wingman death
 		explosion.scale = Vector3(2.0, 2.0, 2.0)
-	
-	# Comms announcement
-	Comms.say_immediate("VERA", "Razor is down! Repeat, Razor is DOWN!", 3.0)
-	
-	# Emit signal
+	if has_node("/root/Comms"):
+		get_node("/root/Comms").say_immediate("VERA", "Razor is down! Repeat, Razor is DOWN!", 3.0)
 	wingman_killed.emit()
-	
-	# Hide (don't destroy - might need reference)
 	visible = false
 	set_physics_process(false)
 
 func _flash_damage() -> void:
-	# Quick flash effect using material emission
 	var ship_mesh = get_node_or_null("ShipMesh")
 	if ship_mesh:
 		var tween = create_tween()
@@ -179,16 +164,23 @@ func _flash_damage() -> void:
 					).set_delay(0.15)
 
 func _on_body_entered(body: Node3D) -> void:
-	# Collision with player or enemy
 	if body is Player:
-		return  # Don't damage from player collision
-	
+		return
+
 func _on_area_entered(area: Area3D) -> void:
-	# Hit by enemy (collision)
 	if area.is_in_group("enemy"):
 		take_damage(1)
+	elif area.is_in_group("enemy_bullet"):
+		take_damage(1)
+		area.queue_free()
 
 func set_combat_enabled(enabled: bool) -> void:
 	combat_enabled = enabled
 	if enabled:
-		_fire_cooldown = randf_range(0.0, fire_rate)  # Randomize first shot
+		_fire_cooldown = randf_range(0.5, fire_rate)
+		_kills_this_combat = 0
+	else:
+		_current_target = null
+
+func set_wave_controller(controller: Node) -> void:
+	_wave_controller = controller
